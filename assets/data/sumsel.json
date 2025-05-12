@@ -1,0 +1,133 @@
+{
+    "provinsi": "Sumatera Selatan",
+    "kota": [
+      {
+        "nama": "Palembang",
+        "daerah": [
+          "Ilir Timur I",
+          "Sukarami",
+          "Alang‑alang Lebar",
+          "Bukit Kecil"
+        ]
+      },
+      {
+        "nama": "Lubuklinggau",
+        "daerah": [
+          "Batu Raja Timur",
+          "Batu Raja Barat",
+          "Batutumbuh"
+        ]
+      },
+      {
+        "nama": "Pagar Alam",
+        "daerah": [
+          "Dempo Selatan",
+          "Giring Cempaka",
+          "Dempo Utara"
+        ]
+      },
+      {
+        "nama": "Prabumulih",
+        "daerah": [
+          "Prabumulih Timur",
+          "Prabumulih Barat",
+          "Cambai"
+        ]
+      },
+      {
+        "nama": "Muara Enim",
+        "daerah": [
+          "Muara Enim",
+          "Kota Agung",
+          "Gunung Megang",
+          "Ujan Mas",
+          "Talang Muara"
+        ]
+      },
+      {
+        "nama": "Ogan Ilir",
+        "daerah": [
+          "Indralaya",
+          "Tanjung Raja",
+          "Pemulutan",
+          "Rambang Kuang",
+          "Payaraman"
+        ]
+      },
+      {
+        "nama": "Ogan Komering Ulu",
+        "daerah": [
+          "Ogan Komering Ulu Timur",
+          "Ogan Komering Ulu Selatan",
+          "Ogan Komering Ulu Utara"
+        ]
+      },
+      {
+        "nama": "Ogan Komering Ilir",
+        "daerah": [
+          "Ogan Komering Ilir Timur",
+          "Ogan Komering Ilir Selatan",
+          "Ogan Komering Ilir Utara"
+        ]
+      },
+      {
+        "nama": "Lahat",
+        "daerah": [
+          "Lahat",
+          "Pagar Alam",
+          "Merapi Selatan",
+          "Merapi Barat"
+        ]
+      },
+      {
+        "nama": "Banyuasin",
+        "daerah": [
+          "Banyuasin I",
+          "Banyuasin II",
+          "Muara Sugihan",
+          "Sembawa"
+        ]
+      },
+      {
+        "nama": "Musi Banyuasin",
+        "daerah": [
+          "Sekayu",
+          "Lais",
+          "Batang Hari Leko"
+        ]
+      },
+      {
+        "nama": "Empat Lawang",
+        "daerah": [
+          "Pendopo",
+          "Ulu Musi",
+          "Tebing Tinggi"
+        ]
+      },
+      {
+        "nama": "Musirawas",
+        "daerah": [
+          "Musirawas",
+          "Muara Lakitan",
+          "Sikap Dalam"
+        ]
+      },
+      {
+        "nama": "Musirawas Utara",
+        "daerah": [
+          "Sumber Harta",
+          "Karang Dapo",
+          "Muara Kelingi"
+        ]
+      },
+      {
+        "nama": "Lahat Selatan",
+        "daerah": [
+          "Lahat Selatan I",
+          "Lahat Selatan II"
+        ]
+      }
+      
+    ]
+  }
+  
