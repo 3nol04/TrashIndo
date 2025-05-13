@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter/services.dart';
+import 'package:geolocator/geolocator.dart' as geo;
+import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' as mp;
 import 'package:trashindo/wigedts/fonts_wigedts.dart';
 
 class DetailScreens extends StatefulWidget {
@@ -15,10 +17,12 @@ class _DetailScreentState extends State<DetailScreens> {
   bool _panelVisible = false;
   final TextEditingController _commertsController = TextEditingController();
   double _height = 0.19;
-  bool _isMark = true;
-  double _lat = 0;
-  double _long = 0;
-  String _imageProfile = 'assets/images/profile.jpg';
+  mp.MapboxMap? _map;
+  mp.PointAnnotation? _markPositon;
+  late mp.PointAnnotationManager _markPoint;
+  // double _lat = 0;
+  // double _long = 0;
+  // String _imageProfile = 'assets/images/profile.jpg';
 
   void _changeHeight() {
     setState(() {
@@ -32,6 +36,99 @@ class _DetailScreentState extends State<DetailScreens> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _requestLocation();
+    // Panggilan tampilkanTujuan dipindahkan ke onMapCreated agar _map & _markPoint sudah siap
+  }
+
+  Future<void> _requestLocation() async {
+    // request permisi lokasi menggunakan geolocator
+    bool servicesEnabled = await geo.Geolocator.isLocationServiceEnabled();
+    if (!servicesEnabled) return Future.error('Lokasi tidak diaktifkan.');
+
+    geo.LocationPermission permission = await geo.Geolocator.checkPermission();
+    if (permission == geo.LocationPermission.denied) {
+      permission = await geo.Geolocator.requestPermission();
+      if (permission == geo.LocationPermission.denied) {
+        return Future.error('Lokasi tidak diaktifkan.');
+      }
+    }
+    if (permission == geo.LocationPermission.deniedForever) {
+      return Future.error('Lokasi tidak diaktifkan.');
+    }
+
+    _getPosition();
+  }
+
+  Future<void> _getPosition() async {
+    // mendengarkan stream posisi
+    geo.Geolocator.getPositionStream(
+      locationSettings: const geo.LocationSettings(
+        accuracy: geo.LocationAccuracy.best,
+      ),
+    ).listen((geo.Position position) {
+      _getCurreatLocatin(position);
+    });
+  }
+
+  Future<void> _getCurreatLocatin(geo.Position position) async {
+    // update marker user di map
+    final poin = mp.Point(
+      coordinates: mp.Position(position.longitude, position.latitude),
+    );
+    final ByteData bytes = await rootBundle.load('assets/images/location.png');
+    final Uint8List imageData = bytes.buffer.asUint8List();
+
+    if (_markPositon != null) {
+      _markPoint.deleteAll();
+    }
+
+    _markPositon = await _markPoint.create(
+      mp.PointAnnotationOptions(
+        geometry: poin,
+        image: imageData,
+        iconSize: 2.0,
+      ),
+    );
+
+    _map?.flyTo(
+      mp.CameraOptions(
+        center: poin,
+        zoom: 10,
+      ),
+      mp.MapAnimationOptions(duration: 1),
+    );
+    await tampilkanTujuan(-2.9627507, 104.7400927);
+  }
+
+  Future<void> tampilkanTujuan(double latitude, double longitude) async {
+    // menambahkan marker tujuan di map
+    final tujuan = mp.Point(
+      coordinates: mp.Position(longitude, latitude),
+    );
+    final ByteData bytes =
+        await rootBundle.load('assets/images/locationUser.png');
+    final Uint8List imageData = bytes.buffer.asUint8List();
+
+    await _markPoint.create(
+      mp.PointAnnotationOptions(
+        geometry: tujuan,
+        image: imageData,
+        iconSize: 2.0,
+      ),
+    );
+
+    _map?.flyTo(
+      mp.CameraOptions(
+        center: tujuan,
+        zoom: 12,
+      ),
+      mp.MapAnimationOptions(duration: 1),
+    );
+  }
+
+  @override
   void dispose() {
     _commertsController.dispose();
     super.dispose();
@@ -40,21 +137,18 @@ class _DetailScreentState extends State<DetailScreens> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: Container(
+        body: SizedBox(
       width: double.infinity,
       height: double.infinity,
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Color(0xFFDEE5AB),
-            Color(0xFFFFFEFE),
-          ],
-        ),
-      ),
       child: Stack(
         children: [
+          mp.MapWidget(
+            onMapCreated: (controller) async {
+              _map = controller;
+              _markPoint =
+                  await controller.annotations.createPointAnnotationManager();
+            },
+          ),
           Stack(
             children: [
               Positioned(
@@ -104,7 +198,7 @@ class _DetailScreentState extends State<DetailScreens> {
                     height: MediaQuery.of(context).size.height * _height,
                     width: MediaQuery.of(context).size.width * 1,
                     decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: Colors.white.withOpacity(0.7),
                         borderRadius: BorderRadius.only(
                           topLeft: Radius.circular(20),
                           topRight: Radius.circular(20),
@@ -234,7 +328,7 @@ class _DetailScreentState extends State<DetailScreens> {
                                                 vertical: 5, horizontal: 10),
                                             padding: const EdgeInsets.all(8),
                                             decoration: BoxDecoration(
-                                              color: Colors.red,
+                                              color: Color(0xFFDCE4A7),
                                               borderRadius:
                                                   BorderRadius.circular(10),
                                             ),
