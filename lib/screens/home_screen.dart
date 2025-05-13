@@ -14,7 +14,7 @@ class HomeScreens extends StatefulWidget {
 class _HomeScreensState extends State<HomeScreens> {
   String imageProfile = '';
   String name = '';
-
+ 
   @override
   @override
   Widget build(BuildContext context) {
