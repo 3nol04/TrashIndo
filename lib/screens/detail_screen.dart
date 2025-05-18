@@ -2,27 +2,29 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart' as geo;
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' as mp;
+import 'package:trashindo/screens/home_screen.dart';
 import 'package:trashindo/wigedts/fonts_wigedts.dart';
 
 class DetailScreens extends StatefulWidget {
   const DetailScreens({super.key});
 
   @override
-  State<DetailScreens> createState() => _DetailScreentState();
+  State<DetailScreens> createState() => _DetailScreenstState();
 }
 
-class _DetailScreentState extends State<DetailScreens> {
-  String kota = 'Palemabang';
+class _DetailScreenstState extends State<DetailScreens> {
+  String kota = 'Palembang';
   String dearah = 'Plaju';
   bool _panelVisible = false;
-  final TextEditingController _commertsController = TextEditingController();
+  bool _marksBooks = false;
+  final TextEditingController _commentController = TextEditingController();
   double _height = 0.19;
+
   mp.MapboxMap? _map;
-  mp.PointAnnotation? _markPositon;
-  late mp.PointAnnotationManager _markPoint;
-  // double _lat = 0;
-  // double _long = 0;
-  // String _imageProfile = 'assets/images/profile.jpg';
+  mp.PointAnnotationManager? _markUser; // Marker lokasi user
+  mp.PointAnnotationManager? _markTujuan; // Marker tujuan
+  mp.PointAnnotation? _markPositon; // Marker instance lokasi user
+  mp.PointAnnotation? _markTujuanPositon; // Marker instance tujuan
 
   void _changeHeight() {
     setState(() {
@@ -37,13 +39,13 @@ class _DetailScreentState extends State<DetailScreens> {
 
   @override
   void initState() {
-    super.initState();
     _requestLocation();
-    // Panggilan tampilkanTujuan dipindahkan ke onMapCreated agar _map & _markPoint sudah siap
+    super.initState();
   }
 
+//Premesensi lokasi ke hp user
   Future<void> _requestLocation() async {
-    // request permisi lokasi menggunakan geolocator
+    // Memeriksa apakah lokasi diaktifkan
     bool servicesEnabled = await geo.Geolocator.isLocationServiceEnabled();
     if (!servicesEnabled) return Future.error('Lokasi tidak diaktifkan.');
 
@@ -51,18 +53,17 @@ class _DetailScreentState extends State<DetailScreens> {
     if (permission == geo.LocationPermission.denied) {
       permission = await geo.Geolocator.requestPermission();
       if (permission == geo.LocationPermission.denied) {
-        return Future.error('Lokasi tidak diaktifkan.');
+        return Future.error('Izin lokasi ditolak.');
       }
     }
     if (permission == geo.LocationPermission.deniedForever) {
-      return Future.error('Lokasi tidak diaktifkan.');
+      return Future.error('Izin lokasi permanen ditolak.');
     }
 
     _getPosition();
   }
 
   Future<void> _getPosition() async {
-    // mendengarkan stream posisi
     geo.Geolocator.getPositionStream(
       locationSettings: const geo.LocationSettings(
         accuracy: geo.LocationAccuracy.best,
@@ -73,37 +74,42 @@ class _DetailScreentState extends State<DetailScreens> {
   }
 
   Future<void> _getCurreatLocatin(geo.Position position) async {
-    // update marker user di map
     final poin = mp.Point(
       coordinates: mp.Position(position.longitude, position.latitude),
     );
     final ByteData bytes = await rootBundle.load('assets/images/location.png');
     final Uint8List imageData = bytes.buffer.asUint8List();
 
+    // Inisialisasi manager jika null
+    _markUser ??= await _map!.annotations.createPointAnnotationManager();
+
+    // Hapus marker lama user jika ada
     if (_markPositon != null) {
-      _markPoint.deleteAll();
+      await _markUser!.delete(_markPositon!);
     }
 
-    _markPositon = await _markPoint.create(
+    // Tambahkan marker baru user
+    _markPositon = await _markUser!.create(
       mp.PointAnnotationOptions(
         geometry: poin,
+        // iconRotate: _rotation,
         image: imageData,
+        // iconImage: "marker-15",
         iconSize: 2.0,
       ),
     );
 
-    _map?.flyTo(
+    // Arahkan kamera ke posisi user
+    _map?.easeTo(
       mp.CameraOptions(
         center: poin,
         zoom: 10,
       ),
       mp.MapAnimationOptions(duration: 1),
     );
-    await tampilkanTujuan(-2.9627507, 104.7400927);
   }
 
   Future<void> tampilkanTujuan(double latitude, double longitude) async {
-    // menambahkan marker tujuan di map
     final tujuan = mp.Point(
       coordinates: mp.Position(longitude, latitude),
     );
@@ -111,7 +117,16 @@ class _DetailScreentState extends State<DetailScreens> {
         await rootBundle.load('assets/images/locationUser.png');
     final Uint8List imageData = bytes.buffer.asUint8List();
 
-    await _markPoint.create(
+    // Inisialisasi manager tujuan jika null
+    _markTujuan ??= await _map!.annotations.createPointAnnotationManager();
+
+    // Hapus marker tujuan sebelumnya jika ada
+    if (_markTujuanPositon != null) {
+      await _markTujuan!.delete(_markTujuanPositon!);
+    }
+
+    // Tambahkan marker tujuan baru
+    _markTujuanPositon = await _markTujuan!.create(
       mp.PointAnnotationOptions(
         geometry: tujuan,
         image: imageData,
@@ -119,7 +134,8 @@ class _DetailScreentState extends State<DetailScreens> {
       ),
     );
 
-    _map?.flyTo(
+    // Arahkan kamera ke tujuan
+    _map?.easeTo(
       mp.CameraOptions(
         center: tujuan,
         zoom: 12,
@@ -128,9 +144,28 @@ class _DetailScreentState extends State<DetailScreens> {
     );
   }
 
+  // Memuar peta saat peta  buka
+  void _onMapCreated(mp.MapboxMap mapboxMap) async {
+    _map = mapboxMap;
+
+    // Bisa langsung buat manager di sini juga jika mau
+    _markUser ??= await _map!.annotations.createPointAnnotationManager();
+    _markTujuan ??= await _map!.annotations.createPointAnnotationManager();
+    tampilkanTujuan(-2.9915, 104.7569);
+  }
+
   @override
   void dispose() {
-    _commertsController.dispose();
+    // Clear all annotations
+    _markUser?.deleteAll();
+    _markTujuan?.deleteAll();
+
+    // Dispose the map
+    _map = null;
+
+    // Dispose controllers
+    _commentController.dispose();
+
     super.dispose();
   }
 
@@ -142,13 +177,8 @@ class _DetailScreentState extends State<DetailScreens> {
       height: double.infinity,
       child: Stack(
         children: [
-          mp.MapWidget(
-            onMapCreated: (controller) async {
-              _map = controller;
-              _markPoint =
-                  await controller.annotations.createPointAnnotationManager();
-            },
-          ),
+          mp.MapWidget(onMapCreated: _onMapCreated),
+          //Bagaian atas navabar detail
           Stack(
             children: [
               Positioned(
@@ -164,7 +194,13 @@ class _DetailScreentState extends State<DetailScreens> {
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           IconButton(
-                              onPressed: () {}, icon: Icon(Icons.arrow_back)),
+                              onPressed: () {
+                                Navigator.push(context,
+                                    MaterialPageRoute(builder: (context) {
+                                  return const HomeScreens();
+                                }));
+                              },
+                              icon: Icon(Icons.arrow_back)),
                           SizedBox(
                             width: MediaQuery.of(context).size.width * 0.5,
                             height: MediaQuery.of(context).size.height * 0.06,
@@ -182,6 +218,44 @@ class _DetailScreentState extends State<DetailScreens> {
                       ),
                     )),
               ),
+              if (_panelVisible == false)
+                Positioned(
+                  left: MediaQuery.of(context).size.width * 0.84,
+                  bottom: MediaQuery.of(context).size.height * 0.2,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      AnimatedContainer(
+                          duration: const Duration(milliseconds: 500),
+                          width: MediaQuery.of(context).size.width * 0.11,
+                          height: MediaQuery.of(context).size.height * 0.05,
+                          decoration: BoxDecoration(
+                            color: _marksBooks ? Colors.yellow : Colors.white,
+                            borderRadius: BorderRadius.circular(10),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.4),
+                                blurRadius: 5,
+                                spreadRadius: 2,
+                                offset: const Offset(2, 4),
+                              ),
+                            ],
+                          ),
+                          child: Center(
+                            child: IconButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _marksBooks = !_marksBooks;
+                                  });
+                                },
+                                icon: Icon(
+                                  Icons.bookmark_add_outlined,
+                                  size: 29,
+                                )),
+                          )),
+                    ],
+                  ),
+                ),
               Positioned(
                 bottom: MediaQuery.of(context).size.height * 0,
                 left: MediaQuery.of(context).size.width * 0,
@@ -384,37 +458,38 @@ class _DetailScreentState extends State<DetailScreens> {
                                       ),
                                     ),
                                     if (_panelVisible)
-                                      AnimatedOpacity(
-                                        duration:
-                                            const Duration(milliseconds: 1000),
-                                        opacity: _panelVisible ? 1 : 0,
-                                        curve: Curves.easeInOut,
-                                        child: Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                              vertical: 5, horizontal: 15),
-                                          child: Container(
-                                            decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(20),
-                                            ),
-                                            child: TextField(
-                                              controller: _commertsController,
-                                              decoration: InputDecoration(
-                                                contentPadding:
-                                                    const EdgeInsets.symmetric(
-                                                        horizontal: 12,
-                                                        vertical: 8),
-                                                hintText: "Tulis komentar",
-                                                border: OutlineInputBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(20),
-                                                  borderSide: BorderSide.none,
-                                                ),
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 5, horizontal: 15),
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            borderRadius:
+                                                BorderRadius.circular(20),
+                                          ),
+                                          child: TextField(
+                                            controller: _commentController,
+                                            maxLines: null,
+                                            decoration: InputDecoration(
+                                              contentPadding:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 12,
+                                                      vertical: 8),
+                                              hintText: "Tulis komentar",
+                                              border: OutlineInputBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(20),
+                                                borderSide: BorderSide.none,
                                               ),
-                                              textInputAction:
-                                                  TextInputAction.send,
-                                              onSubmitted: (_) {},
                                             ),
+                                            textInputAction:
+                                                TextInputAction.send,
+                                            onSubmitted: (_) {
+                                              setState(() {
+                                                _commentController.clear();
+                                              });
+                                              print(
+                                                  'Test submit: ${_commentController.text}');
+                                            },
                                           ),
                                         ),
                                       ),
