@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:trashindo/model/data_daerah.dart';
+import 'package:trashindo/screens/home_screen.dart';
 
 class UploadScreends extends StatefulWidget {
   const UploadScreends({super.key});
@@ -16,6 +17,7 @@ class UploadScreends extends StatefulWidget {
 
 class _UploadScreendsState extends State<UploadScreends> {
   final TextEditingController _lokasiDetailController = TextEditingController();
+  final TextEditingController _deskripsiController = TextEditingController();
   Sumsel? sumsel;
   String? selectedKota;
   String? selectedStatus;
@@ -108,7 +110,7 @@ class _UploadScreendsState extends State<UploadScreends> {
       compressedImagePath = base64Encode(compressedImage!);
     });
   }
-
+  
   void _showImagePickerOptions(BuildContext context) {
     // Reset image file when showing options
     showModalBottomSheet(
@@ -182,10 +184,18 @@ class _UploadScreendsState extends State<UploadScreends> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Icon(
-                      Icons.arrow_back_outlined,
-                      size: 30,
-                      color: Colors.black,
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(context,
+                            MaterialPageRoute(builder: (context) {
+                          return const HomeScreens();
+                        }));
+                      },
+                      child: Icon(
+                        Icons.arrow_back_outlined,
+                        size: 30,
+                        color: Colors.black,
+                      ),
                     ),
                     Container(
                       alignment: Alignment.center,
@@ -472,7 +482,7 @@ class _UploadScreendsState extends State<UploadScreends> {
                 Container(
                   alignment: Alignment.topLeft,
                   width: double.infinity,
-                  height: MediaQuery.of(context).size.height * 0.2,
+                  height: MediaQuery.of(context).size.height * 0.05,
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(10),
@@ -510,6 +520,61 @@ class _UploadScreendsState extends State<UploadScreends> {
                   ),
                 ),
                 const SizedBox(height: 10),
+                Container(
+                  width: double.infinity,
+                  height: MediaQuery.of(context).size.height * 0.02,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    "Deskripsi",
+                    style: GoogleFonts.poppins(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black.withOpacity(0.5),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Container(
+                  alignment: Alignment.topLeft,
+                  width: double.infinity,
+                  height: MediaQuery.of(context).size.height * 0.2,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.25),
+                        blurRadius: 8,
+                        spreadRadius: 1,
+                        offset: const Offset(4, 8),
+                      )
+                    ],
+                  ),
+                  child: TextField(
+                    controller: _deskripsiController,
+                    maxLines: null,
+                    // agar tinggi bisa menyesuaikan teks
+                    textAlign: TextAlign.start,
+                    style: GoogleFonts.poppins(
+                      fontSize: 15,
+                      color: Colors.black.withOpacity(0.7),
+                    ),
+                    decoration: InputDecoration(
+                      hintText: 'Detail Informasi',
+                      border: InputBorder.none,
+                      filled: true,
+                      fillColor: Colors.white,
+                      contentPadding: const EdgeInsets.all(15),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(
+                          color: Colors.white,
+                        ),
+                      ),
+                    ), // beri jarak teks dari tepi
+                  ),
+                ),
+                const SizedBox(height: 15),
                 GestureDetector(
                     child: Container(
                   width: double.infinity,
@@ -534,19 +599,6 @@ class _UploadScreendsState extends State<UploadScreends> {
                             color: Colors.white,
                           ))),
                 )),
-
-                // // TODO field Lokasi
-                // Container(
-                //   width: double.infinity,
-                //   height: MediaQuery.of(context).size.height * 0.02,
-                //   alignment: Alignment.centerLeft,
-                //   child: Text("Daerah",
-                //       style: GoogleFonts.poppins(
-                //         fontSize: 15,
-                //         fontWeight: FontWeight.w500,
-                //         color: Colors.black.withOpacity(0.5),
-                //       )),
-                // ),
               ],
             ),
           ),

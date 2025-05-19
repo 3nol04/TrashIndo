@@ -30,9 +30,10 @@ class MainApp extends StatelessWidget {
             //body: Splashscreen(),
             //body: OnboardingScreen()
             //body: LoginScreens(),
-            // body: HomeScreens(),
-            // body: HomeScreens(),
-            //body: UploadScreends(),
-            body: DetailScreens()));
+            //body: HomeScreens(),
+            //body: HomeScreens(),
+            body: UploadScreends()
+           //body: DetailScreens()
+           ));
   }
 }
