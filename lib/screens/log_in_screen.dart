@@ -61,7 +61,10 @@ class _LoginScreensState extends State<LoginScreens> {
   }
 @override
   Widget build(BuildContext context) {
+    final sizeheight = MediaQuery.of(context).size.height;
+    final sizeWidth = MediaQuery.of(context).size.width;
     return Scaffold(
+    resizeToAvoidBottomInset: true,
         body: Container(
             width: double.infinity,
             height: double.infinity,
@@ -70,15 +73,15 @@ class _LoginScreensState extends State<LoginScreens> {
             child: Stack(
               children: [
                 Positioned(
-                    top: MediaQuery.of(context).size.height * 0.35,
-                    left: MediaQuery.of(context).size.width * 0.1,
+                    top:  sizeheight* 0.35,
+                    left: sizeWidth * 0.1,
                     child: Container(
                       transform: Matrix4.rotationZ(10),
                       child: SvgPicture.asset('assets/svg/element.svg'),
                     )),
                 Positioned(
-                  top: MediaQuery.of(context).size.height * 0.32,
-                  left: MediaQuery.of(context).size.width * 0.1,
+                  top:  sizeheight* 0.32,
+                  left: sizeWidth * 0.1,
                   child: Column(
                       mainAxisAlignment: MainAxisAlignment.start,
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -104,8 +107,8 @@ class _LoginScreensState extends State<LoginScreens> {
                       ]),
                 ),
                 Positioned(
-                    top: MediaQuery.of(context).size.height * 0.03,
-                    right: -MediaQuery.of(context).size.width * 0.82,
+                    top:  sizeheight* 0.03,
+                    right: -sizeWidth * 0.82,
                     child: Container(
                       transform: Matrix4.rotationZ(0.5),
                       child: SvgPicture.asset('assets/svg/element.svg'),
@@ -115,8 +118,8 @@ class _LoginScreensState extends State<LoginScreens> {
                   curve: Curves.easeInOut,
                   bottom: _positonForm,
                   child: Container(
-                      width: MediaQuery.of(context).size.width,
-                      height: MediaQuery.of(context).size.height * 0.58,
+                      width: sizeWidth,
+                      height:  sizeheight* 0.58,
                       decoration: BoxDecoration(
                         boxShadow: [
                           const BoxShadow(
@@ -154,8 +157,8 @@ class _LoginScreensState extends State<LoginScreens> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Container(
-                                    width: MediaQuery.of(context).size.width,
-                                    height: MediaQuery.of(context).size.height *
+                                    width: sizeWidth,
+                                    height:  sizeheight*
                                         0.05,
                                     decoration: BoxDecoration(
                                       color: const Color(0xFFDEE5AB),
@@ -204,8 +207,8 @@ class _LoginScreensState extends State<LoginScreens> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Container(
-                                    width: MediaQuery.of(context).size.width,
-                                    height: MediaQuery.of(context).size.height *
+                                    width: sizeWidth,
+                                    height:  sizeheight*
                                         0.05,
                                     decoration: BoxDecoration(
                                       color: const Color(0xFFDEE5AB),

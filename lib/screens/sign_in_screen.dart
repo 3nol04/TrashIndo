@@ -99,6 +99,8 @@ class _SingupscreensState extends State<Singupscreens> {
 
   @override
   Widget build(BuildContext context) {
+    final  height = MediaQuery.of(context).size.height;
+    final  width = MediaQuery.of(context).size.width;
     return Scaffold(
         body: Container(
             width: double.infinity,
@@ -107,15 +109,15 @@ class _SingupscreensState extends State<Singupscreens> {
                 const BoxDecoration(color: Color.fromARGB(255, 160, 171, 87)),
             child: Stack(children: [
               Positioned(
-                  top: MediaQuery.of(context).size.height * 0.35,
-                  left: MediaQuery.of(context).size.width * 0.1,
+                  top: height* 0.35,
+                  left: width * 0.1,
                   child: Container(
                     transform: Matrix4.rotationZ(10),
                     child: SvgPicture.asset('assets/svg/element.svg'),
                   )),
               Positioned(
-                top: MediaQuery.of(context).size.height * 0.32,
-                left: MediaQuery.of(context).size.width * 0.1,
+                top: height* 0.32,
+                left: width * 0.1,
                 child: Column(
                     mainAxisAlignment: MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -141,8 +143,8 @@ class _SingupscreensState extends State<Singupscreens> {
                     ]),
               ),
               Positioned(
-                  top: MediaQuery.of(context).size.height * 0.03,
-                  right: -MediaQuery.of(context).size.width * 0.82,
+                  top: height* 0.03,
+                  right: -width * 0.82,
                   child: Container(
                     transform: Matrix4.rotationZ(0.5),
                     child: SvgPicture.asset('assets/svg/element.svg'),
@@ -152,8 +154,8 @@ class _SingupscreensState extends State<Singupscreens> {
                 curve: Curves.easeInOut,
                 bottom: _positionForm,
                 child: Container(
-                    width: MediaQuery.of(context).size.width,
-                    height: MediaQuery.of(context).size.height * 0.58,
+                    width: width,
+                    height: height* 0.58,
                     decoration: BoxDecoration(
                       color: Color(0xFFFFFFFF),
                       boxShadow: [
@@ -192,9 +194,9 @@ class _SingupscreensState extends State<Singupscreens> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Container(
-                                  width: MediaQuery.of(context).size.width,
+                                  width: width,
                                   height:
-                                      MediaQuery.of(context).size.height * 0.05,
+                                      height* 0.05,
                                   decoration: BoxDecoration(
                                     color: const Color(0xFFDEE5AB),
                                     borderRadius: BorderRadius.circular(20),
@@ -242,8 +244,8 @@ class _SingupscreensState extends State<Singupscreens> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Container(
-                                    width: MediaQuery.of(context).size.width,
-                                    height: MediaQuery.of(context).size.height *
+                                    width: width,
+                                    height: height*
                                         0.05,
                                     decoration: BoxDecoration(
                                       color: const Color(0xFFDEE5AB),
@@ -313,9 +315,9 @@ class _SingupscreensState extends State<Singupscreens> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Container(
-                                  width: MediaQuery.of(context).size.width,
+                                  width: width,
                                   height:
-                                      MediaQuery.of(context).size.height * 0.05,
+                                      height* 0.05,
                                   decoration: BoxDecoration(
                                     color: const Color(0xFFDEE5AB),
                                     borderRadius: BorderRadius.circular(20),

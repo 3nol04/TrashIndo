@@ -32,7 +32,8 @@ class MainApp extends StatelessWidget {
             //body: LoginScreens(),
             //body: HomeScreens(),
             //body: HomeScreens(),
-            body: UploadScreends()
+            body: UploadScreends(),
+            //
            //body: DetailScreens()
            ));
   }
