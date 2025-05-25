@@ -17,8 +17,8 @@ class _ListKotakSampahWegendstsState extends State<ListKotakSampahWegendsts> {
     return Padding(
       padding: const EdgeInsets.only(top: 5, bottom: 10),
       child: GestureDetector(
-        onTap: () {
-          Navigator.push(context,
+        onTap: ()async {
+          await Navigator.push(context,
               MaterialPageRoute(builder: (context) => const DetailScreens()));
         },
         child: Container(
