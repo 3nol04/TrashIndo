@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -72,8 +74,29 @@ class _SingupscreensState extends State<Singupscreens> {
         _errorMessageEmail = '';
         _errorMessagePassword = '';
       });
-      // Lakukan aksi jika semua validasi berhasil
     }
+  }
+
+  Future<void> _signUpRequest() async {
+    await _validateEmail();
+    if (_errorMessageEmail.isNotEmpty || _errorMessagePassword.isNotEmpty) {
+      return;
+    }
+    final idUser = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim());
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(idUser.user!.uid)
+        .set({
+      'email': _emailController.text.trim(),
+      'password': _passwordController.text.trim(),
+      //role : user
+      'createdAt': Timestamp.now(),
+    }).then((value) async {
+      await Navigator.pushReplacement(context,
+          MaterialPageRoute(builder: (context) => const LoginScreens()));
+    });
   }
 
   @override
@@ -81,7 +104,6 @@ class _SingupscreensState extends State<Singupscreens> {
     _emailController.dispose();
     _passwordController.dispose();
     _validPassController.dispose();
-
     super.dispose();
   }
 

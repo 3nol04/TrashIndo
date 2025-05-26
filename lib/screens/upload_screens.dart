@@ -152,6 +152,10 @@ class _UploadScreendsState extends State<UploadScreends> {
     );
   }
 
+Future <void> _sendData() async{
+  
+}
+
   final List<String> status = [
     'Kosong',
     'Penuh',

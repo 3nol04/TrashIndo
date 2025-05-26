@@ -1,7 +1,8 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:trashindo/screens/sign_in_screen.dart';
+import 'package:trashindo/screens/sign_up_screen.dart';
 import 'package:trashindo/wigedts/error_login_wigedts.dart';
 
 class LoginScreens extends StatefulWidget {
@@ -17,7 +18,7 @@ class _LoginScreensState extends State<LoginScreens> {
   String _errorMessage = '';
   bool _isObscure = true;
 
-  void _validateEmail() async {
+  Future<void> _validateEmail() async {
     String email = _emailController.text;
     String password = _passwordController.text;
     if (email.isEmpty || password.isEmpty) {
@@ -35,9 +36,30 @@ class _LoginScreensState extends State<LoginScreens> {
     }
     setState(() {
       _errorMessage = '';
-      print('Email: $email');
-      print('Password: $password');
     });
+  }
+
+  Future<void> _sendLoginRequest() async {
+    await _validateEmail();
+    if (_errorMessage.isNotEmpty) {
+      return;
+    }
+    await FirebaseAuth.instance.signInWithEmailAndPassword(
+      email: _emailController.text.trim(),
+      password: _passwordController.text.trim(),
+    ).then((value) async {
+      if (mounted) {
+        await Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+                builder: (context) => const Singupscreens()));
+      }
+    }).catchError((error) {
+      setState(() {
+        _errorMessage = error.toString();
+      });
+    }
+    );
   }
 
   @override
@@ -308,7 +330,7 @@ class _LoginScreensState extends State<LoginScreens> {
                                                     bottom: 10),
                                                 child: ElevatedButton(
                                                   onPressed: () {
-                                                    _validateEmail();
+                                                     _sendLoginRequest();
                                                     // fungsi untuk tombol log in
                                                   },
                                                   style: ButtonStyle(
