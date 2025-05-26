@@ -1,6 +1,8 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
+import 'package:trashindo/firebase_options.dart';
 import 'package:trashindo/screens/detail_screen.dart';
 import 'package:trashindo/screens/home_screen.dart';
 import 'package:trashindo/screens/log_in_screen.dart';
@@ -8,8 +10,12 @@ import 'package:trashindo/screens/on_boarding_screen.dart';
 import 'package:trashindo/screens/splash_screen.dart';
 import 'package:trashindo/screens/upload_screens.dart';
 
-void main() {
+void main() async {
   _setUp();
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(const MainApp());
 }
 
@@ -27,12 +33,12 @@ class MainApp extends StatelessWidget {
     return const MaterialApp(
         debugShowCheckedModeBanner: false,
         home: Scaffold(
-            //body: Splashscreen(),
-            //body: OnboardingScreen()
-            //body: LoginScreens(),
-            body: HomeScreens(),
-            //body: UploadScreends(),
-          //  body: DetailScreens()
-            ));
+          //body: Splashscreen(),
+          //body: OnboardingScreen()
+          //body: LoginScreens(),
+          body: HomeScreens(),
+          //body: UploadScreends(),
+          //body: DetailScreens()
+        ));
   }
 }

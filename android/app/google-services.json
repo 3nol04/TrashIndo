@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "247930628183",
+    "project_id": "trashindo-f408a",
+    "storage_bucket": "trashindo-f408a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:247930628183:android:a03bd5e3224d89a9c75b12",
+        "android_client_info": {
+          "package_name": "com.example.trashindo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDiYHgNQTZCtqIwWDuNlW3_TnBlnhFs6wQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
