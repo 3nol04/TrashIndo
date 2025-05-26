@@ -446,7 +446,7 @@ class _SingupscreensState extends State<Singupscreens> {
                                                 bottom: 10),
                                             child: ElevatedButton(
                                               onPressed: () {
-                                                _validateEmail();
+                                                _signUpRequest();
                                                 // fungsi untuk tombol log in
                                               },
                                               style: ButtonStyle(

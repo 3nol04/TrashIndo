@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart' as geo;
 import 'package:google_fonts/google_fonts.dart';
 import 'package:trashindo/wigedts/card_category_wegidts.dart';
 import 'package:trashindo/wigedts/corosel_homepage_wigents.dart';
@@ -14,12 +15,33 @@ class HomeScreens extends StatefulWidget {
 class _HomeScreensState extends State<HomeScreens> {
   String imageProfile = '';
   String name = '';
+  void initState() {
+    super.initState();
+    _requestLocation();
+  }
+
+  Future<void> _requestLocation() async {
+    // Memeriksa apakah lokasi diaktifkan
+    bool servicesEnabled = await geo.Geolocator.isLocationServiceEnabled();
+    if (!servicesEnabled) return Future.error('Lokasi tidak diaktifkan.');
+
+    geo.LocationPermission permission = await geo.Geolocator.checkPermission();
+    if (permission == geo.LocationPermission.denied) {
+      permission = await geo.Geolocator.requestPermission();
+      if (permission == geo.LocationPermission.denied) {
+        return Future.error('Izin lokasi ditolak.');
+      }
+    }
+    if (permission == geo.LocationPermission.deniedForever) {
+      return Future.error('Izin lokasi permanen ditolak.');
+    }
+  }
+
   @override
   void dispose() {
-    // TODO: implement dispose
-    
     super.dispose();
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -178,9 +200,19 @@ class _HomeScreensState extends State<HomeScreens> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              CardCategory(images:'assets/images/trashimg/alreadytrash.png', title:'Kosong',),
-                              CardCategory(images:'assets/images/trashimg/carktrash.png', title:'Rusak',),
-                              CardCategory(images:'assets/images/trashimg/fulltrash.png', title:'Penuh',),
+                              CardCategory(
+                                images:
+                                    'assets/images/trashimg/alreadytrash.png',
+                                title: 'Kosong',
+                              ),
+                              CardCategory(
+                                images: 'assets/images/trashimg/carktrash.png',
+                                title: 'Rusak',
+                              ),
+                              CardCategory(
+                                images: 'assets/images/trashimg/fulltrash.png',
+                                title: 'Penuh',
+                              ),
                             ],
                           ),
                         ),

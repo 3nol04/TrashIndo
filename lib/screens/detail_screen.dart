@@ -30,7 +30,7 @@ class _DetailScreenstState extends State<DetailScreens> {
   @override
   void initState() {
     super.initState();
-    _requestLocation();
+    _getPosition();
     _focusNode.addListener(() {
       if (_focusNode.hasFocus) {
         setState(() {
@@ -52,24 +52,6 @@ class _DetailScreenstState extends State<DetailScreens> {
   }
 
 //Premesensi lokasi ke hp user
-  Future<void> _requestLocation() async {
-    // Memeriksa apakah lokasi diaktifkan
-    bool servicesEnabled = await geo.Geolocator.isLocationServiceEnabled();
-    if (!servicesEnabled) return Future.error('Lokasi tidak diaktifkan.');
-
-    geo.LocationPermission permission = await geo.Geolocator.checkPermission();
-    if (permission == geo.LocationPermission.denied) {
-      permission = await geo.Geolocator.requestPermission();
-      if (permission == geo.LocationPermission.denied) {
-        return Future.error('Izin lokasi ditolak.');
-      }
-    }
-    if (permission == geo.LocationPermission.deniedForever) {
-      return Future.error('Izin lokasi permanen ditolak.');
-    }
-
-    _getPosition();
-  }
 
   Future<void> _getPosition() async {
     geo.Geolocator.getPositionStream(
@@ -81,7 +63,7 @@ class _DetailScreenstState extends State<DetailScreens> {
     });
   }
 
-  Future<void> _getCurreatLocatin(geo.Position position) async {
+Future<void> _getCurreatLocatin(geo.Position position) async {
     if (_map == null) return; // Map belum siap
 
     try {

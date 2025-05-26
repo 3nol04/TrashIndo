@@ -1,6 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -110,7 +113,7 @@ class _UploadScreendsState extends State<UploadScreends> {
       compressedImagePath = base64Encode(compressedImage!);
     });
   }
-  
+
   void _showImagePickerOptions(BuildContext context) {
     // Reset image file when showing options
     showModalBottomSheet(
@@ -152,9 +155,26 @@ class _UploadScreendsState extends State<UploadScreends> {
     );
   }
 
-Future <void> _sendData() async{
-  
-}
+  Future<void> _sendDataSampah() async {
+    try {
+      final Position position = await Geolocator.getCurrentPosition(
+        locationSettings: LocationSettings(accuracy: LocationAccuracy.best),
+      );
+      await FirebaseFirestore.instance.collection('sampah').add({
+        'kota': selectedKota,
+        'status': selectedStatus,
+        'daerah': selectedDaerah,
+        'lokasi_detail': _lokasiDetailController.text,
+        'deskripsi': _deskripsiController.text,
+        'image': compressedImagePath, // Simpan gambar terkompresi
+        'latitude': position.latitude,
+        'longitude': position.longitude,
+      });
+    } catch (e) {
+      print('Error getting location: $e');
+      return Future.error('Error getting location: $e');
+    }
+  }
 
   final List<String> status = [
     'Kosong',
