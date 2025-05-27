@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart' as geo;
 import 'package:google_fonts/google_fonts.dart';
+import 'package:trashindo/model/dataSampah.dart';
+import 'package:trashindo/services/sampahServices.dart';
 import 'package:trashindo/wigedts/card_category_wegidts.dart';
 import 'package:trashindo/wigedts/corosel_homepage_wigents.dart';
 import 'package:trashindo/wigedts/list_kotak_sampah_wegendsts.dart';
@@ -15,6 +17,9 @@ class HomeScreens extends StatefulWidget {
 class _HomeScreensState extends State<HomeScreens> {
   String imageProfile = '';
   String name = '';
+  SampahServices sampah = SampahServices();
+
+  @override
   void initState() {
     super.initState();
     _requestLocation();
@@ -24,7 +29,6 @@ class _HomeScreensState extends State<HomeScreens> {
     // Memeriksa apakah lokasi diaktifkan
     bool servicesEnabled = await geo.Geolocator.isLocationServiceEnabled();
     if (!servicesEnabled) return Future.error('Lokasi tidak diaktifkan.');
-
     geo.LocationPermission permission = await geo.Geolocator.checkPermission();
     if (permission == geo.LocationPermission.denied) {
       permission = await geo.Geolocator.requestPermission();
@@ -180,7 +184,6 @@ class _HomeScreensState extends State<HomeScreens> {
                           child: Corousel(),
                         ),
                       ),
-
                       // Status
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 10),
@@ -232,10 +235,39 @@ class _HomeScreensState extends State<HomeScreens> {
                           ),
                         ),
                       ),
-                      Column(
-                        children: List.generate(
-                          10,
-                          (index) => ListKotakSampahWegendsts(status: "Rusak"),
+                      SizedBox(
+                        height: 300, // atur tinggi sesuai kebutuhan
+                        child: FutureBuilder<List<Sampah>>(
+                          future: sampah.getAllTempatSampah(),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return const Center(
+                                  child: CircularProgressIndicator());
+                            } else if (snapshot.hasError) {
+                              return Center(
+                                  child: Text('Error: ${snapshot.error}'));
+                            } else if (!snapshot.hasData ||
+                                snapshot.data!.isEmpty) {
+                              return const Center(
+                                  child: Text('No data available'));
+                            } else {
+                              return ListView.builder(
+                                itemCount: snapshot.data!.length,
+                                itemBuilder: (context, index) {
+                                  final item = snapshot.data![index];
+                                  return ListKotakSampahWegendsts(
+                                    id : item.id ?? '',
+                                    status: item.status ?? 'Tidak ada status',
+                                    image: item.image ?? '',
+                                    daerah: item.daerah ?? 'Tidak ada daerah',
+                                    deskripsi:
+                                        item.deskripsi ?? 'Tidak ada deskripsi',
+                                  );
+                                },
+                              );
+                            }
+                          },
                         ),
                       ),
                     ],

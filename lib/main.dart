@@ -35,9 +35,9 @@ class MainApp extends StatelessWidget {
         home: Scaffold(
           //body: Splashscreen(),
           //body: OnboardingScreen()
-          //body: LoginScreens(),
-          body: HomeScreens(),
-          //body: UploadScreends(),
+        // body: LoginScreens(),
+          //body: HomeScreens(),
+         body: UploadScreends(),
           //body: DetailScreens()
         ));
   }

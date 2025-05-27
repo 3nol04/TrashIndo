@@ -84,11 +84,12 @@ class _SingupscreensState extends State<Singupscreens> {
     }
     final idUser = await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: _emailController.text.trim(),
-        password: _passwordController.text.trim());
+        password: _passwordController.text);
     await FirebaseFirestore.instance
         .collection('users')
         .doc(idUser.user!.uid)
         .set({
+      'name': 'guest', // default name for new user
       'email': _emailController.text.trim(),
       'password': _passwordController.text.trim(),
       //role : user
@@ -100,6 +101,7 @@ class _SingupscreensState extends State<Singupscreens> {
   }
 
   @override
+
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
@@ -127,7 +129,7 @@ class _SingupscreensState extends State<Singupscreens> {
                     child: SvgPicture.asset('assets/svg/element.svg'),
                   )),
               Positioned(
-                top: height * 0.38,
+                top: height * 0.3,
                 left: width * 0.1,
                 child: Column(
                     mainAxisAlignment: MainAxisAlignment.start,
@@ -171,7 +173,7 @@ class _SingupscreensState extends State<Singupscreens> {
                       children: [
                         Container(
                             width: width,
-                            height: height * 0.5,
+                            height: height * 0.6,
                             decoration: BoxDecoration(
                               color: Color(0xFFFFFFFF),
                               boxShadow: [
