@@ -1,10 +1,22 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:trashindo/screens/detail_screen.dart';
 
 class ListKotakSampahWegendsts extends StatefulWidget {
-  const ListKotakSampahWegendsts({super.key, required this.status});
+  const ListKotakSampahWegendsts(
+      {super.key,
+      required this.id,
+      required this.status,
+      required this.image,
+      required this.daerah,
+      required this.deskripsi});
   final String status;
+  final String id;
+  final String image;
+  final String daerah;
+  final String deskripsi;
 
   @override
   State<ListKotakSampahWegendsts> createState() =>
@@ -17,9 +29,9 @@ class _ListKotakSampahWegendstsState extends State<ListKotakSampahWegendsts> {
     return Padding(
       padding: const EdgeInsets.only(top: 5, bottom: 10),
       child: GestureDetector(
-        onTap: ()async {
+        onTap: () async {
           await Navigator.push(context,
-              MaterialPageRoute(builder: (context) => const DetailScreens()));
+              MaterialPageRoute(builder: (context) =>  DetailScreens( id : widget.id)));
         },
         child: Container(
             width: double.infinity,
@@ -48,10 +60,18 @@ class _ListKotakSampahWegendstsState extends State<ListKotakSampahWegendsts> {
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(10),
-                      image: const DecorationImage(
-                          image: NetworkImage(
-                              'https://as1.ftcdn.net/v2/jpg/05/39/68/24/1000_F_539682434_tP6yFmNpXIdXM9tq8izpxloyvQXeEb3R.jpg'),
-                          fit: BoxFit.cover),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Image.memory(
+                        base64Decode(widget.image),
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return const Center(
+                            child: Icon(Icons.error, color: Colors.red),
+                          );
+                        },
+                      ),
                     ),
                   ),
                   Padding(
@@ -76,7 +96,7 @@ class _ListKotakSampahWegendstsState extends State<ListKotakSampahWegendsts> {
                                   height:
                                       MediaQuery.of(context).size.height * 0.03,
                                   child: Text(
-                                    'Kotak Sampah Wegendsts',
+                                    widget.daerah,
                                     style: GoogleFonts.poppins(
                                       fontSize: 15,
                                       fontWeight: FontWeight.w500,
@@ -93,7 +113,7 @@ class _ListKotakSampahWegendstsState extends State<ListKotakSampahWegendsts> {
                                 width: 200,
                                 height: 20,
                                 child: Text(
-                                  'Kotak Sampah Wegendsts sudah penusdsd hvgkhxfxxfhtbdrdbrfyttgvybugv',
+                                  widget.deskripsi,
                                   style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w400,

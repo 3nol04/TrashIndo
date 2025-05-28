@@ -1,22 +1,27 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart' as geo;
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' as mp;
+import 'package:trashindo/model/dataSampah.dart';
 import 'package:trashindo/screens/home_screen.dart';
+import 'package:trashindo/services/sampahServices.dart';
 import 'package:trashindo/wigedts/fonts_wigedts.dart';
 
 class DetailScreens extends StatefulWidget {
-  const DetailScreens({super.key});
-
+  DetailScreens({super.key, required this.id});
+  String id;
   @override
   State<DetailScreens> createState() => _DetailScreenstState();
 }
 
 class _DetailScreenstState extends State<DetailScreens> {
-  String kota = 'Palembang';
-  String dearah = 'Plaju';
+  SampahServices sampahServices = SampahServices();
+  Sampah? _sampah;
   bool _panelVisible = false;
   bool _marksBooks = false;
+  double? _latitude, _longitude;
   final TextEditingController _commentController = TextEditingController();
   double _height = 0.19;
   final FocusNode _focusNode = FocusNode();
@@ -30,7 +35,8 @@ class _DetailScreenstState extends State<DetailScreens> {
   @override
   void initState() {
     super.initState();
-    _requestLocation();
+    _getPosition();
+    _setScreen();
     _focusNode.addListener(() {
       if (_focusNode.hasFocus) {
         setState(() {
@@ -44,6 +50,17 @@ class _DetailScreenstState extends State<DetailScreens> {
     });
   }
 
+  Future<void> _setScreen() async {
+    try {
+      final dataSampah = await sampahServices.getSampah(widget.id);
+      setState(() {
+        _sampah = dataSampah;
+      });
+    } catch (e) {
+      print('Gagal mengambil data sampah: $e');
+    }
+  }
+
   Future<void> _changeHeight() async {
     setState(() {
       _height = _height == 0.19 ? 0.55 : 0.19;
@@ -52,24 +69,6 @@ class _DetailScreenstState extends State<DetailScreens> {
   }
 
 //Premesensi lokasi ke hp user
-  Future<void> _requestLocation() async {
-    // Memeriksa apakah lokasi diaktifkan
-    bool servicesEnabled = await geo.Geolocator.isLocationServiceEnabled();
-    if (!servicesEnabled) return Future.error('Lokasi tidak diaktifkan.');
-
-    geo.LocationPermission permission = await geo.Geolocator.checkPermission();
-    if (permission == geo.LocationPermission.denied) {
-      permission = await geo.Geolocator.requestPermission();
-      if (permission == geo.LocationPermission.denied) {
-        return Future.error('Izin lokasi ditolak.');
-      }
-    }
-    if (permission == geo.LocationPermission.deniedForever) {
-      return Future.error('Izin lokasi permanen ditolak.');
-    }
-
-    _getPosition();
-  }
 
   Future<void> _getPosition() async {
     geo.Geolocator.getPositionStream(
@@ -154,14 +153,19 @@ class _DetailScreenstState extends State<DetailScreens> {
     );
   }
 
-  // Memuar peta saat peta  buka
   void _onMapCreated(mp.MapboxMap mapboxMap) async {
     _map = mapboxMap;
 
-    // Bisa langsung buat manager di sini juga jika mau
+  
     _markUser ??= await _map!.annotations.createPointAnnotationManager();
     _markTujuan ??= await _map!.annotations.createPointAnnotationManager();
-    tampilkanTujuan(-2.9915, 104.7569);
+    if (_sampah?.latitude! != null && _sampah?.longitude! != null) {
+      setState(() {
+        _latitude = _sampah!.latitude!;
+        _longitude = _sampah!.longitude!;
+      });
+    }
+      tampilkanTujuan(_latitude!, _longitude!);
   }
 
   @override
@@ -172,7 +176,7 @@ class _DetailScreenstState extends State<DetailScreens> {
 
     // Dispose the map
     _map = null;
-
+    _focusNode.dispose();
     // Dispose controllers
     _commentController.dispose();
 
@@ -194,7 +198,7 @@ class _DetailScreenstState extends State<DetailScreens> {
             Stack(
               children: [
                 Positioned(
-                  top: sizeHeight * 0.02,
+                  top: sizeHeight * 0.04,
                   left: sizeWidth * 0.05,
                   child: Padding(
                       padding: const EdgeInsets.all(8.0),
@@ -214,16 +218,26 @@ class _DetailScreenstState extends State<DetailScreens> {
                                 },
                                 icon: Icon(Icons.arrow_back)),
                             SizedBox(
-                              width: sizeWidth * 0.5,
+                              width: sizeWidth * 0.6,
                               height: sizeHeight * 0.06,
                               child: Center(
-                                child: Text(
-                                  '$dearah, $kota',
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
+                                child: _sampah != null &&
+                                        _sampah!.daerah != null &&
+                                        _sampah!.kota != null
+                                    ? Text(
+                                        '${_sampah!.daerah} - ${_sampah!.kota}',
+                                        style: TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      )
+                                    : Text(
+                                        'Memuat lokasi...',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w400,
+                                        ),
+                                      ),
                               ),
                             ),
                           ],
@@ -320,8 +334,16 @@ class _DetailScreenstState extends State<DetailScreens> {
                                               borderRadius:
                                                   BorderRadius.circular(10),
                                               image: DecorationImage(
-                                                image: AssetImage(
-                                                    'assets/images/trashimg/kotasampah.png'),
+                                                image: _sampah?.image! != null
+                                                    ? MemoryImage(
+                                                        base64Decode(
+                                                            _sampah!.image!),
+                                                      )
+                                                    : AssetImage(
+                                                        "assets/images/broken-image.png"),
+                                                fit: BoxFit.cover,
+                                                alignment: Alignment.center,
+                                                scale: 1.0,
                                               )),
                                         ),
                                         SizedBox(
@@ -354,7 +376,9 @@ class _DetailScreenstState extends State<DetailScreens> {
                                                           SizedBox(width: 5),
                                                           Flexible(
                                                             child: CustomFont(
-                                                              title: "Tersedia",
+                                                              title: _sampah
+                                                                      ?.status! ??
+                                                                  "Tidak diketahui",
                                                               size: 12,
                                                               width: 1.0,
                                                               maxLines: 1,
@@ -367,8 +391,8 @@ class _DetailScreenstState extends State<DetailScreens> {
                                                 ),
                                                 SizedBox(height: 1),
                                                 CustomFont(
-                                                  title:
-                                                      "Keadaan sampah penuh & harus di angkut.",
+                                                  title: _sampah?.deskripsi! ??
+                                                      "Tidak diketahui",
                                                   size: 12,
                                                   width: 0.9,
                                                   maxLines: 2,
@@ -385,7 +409,8 @@ class _DetailScreenstState extends State<DetailScreens> {
                                                 // Alamat lengkap
                                                 CustomFont(
                                                   title:
-                                                      "Jl. Raya Pelabuhan No.1, Kel. Pelabuhan, Kec. Pelabuhan, Kota Palembang, Sumatera Selatan 30118, Indonesia",
+                                                      _sampah?.lokasiDetail! ??
+                                                          "Tidak diketahui",
                                                   size: 12,
                                                   width: 0.9,
                                                   maxLines: 3,

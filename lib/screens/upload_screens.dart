@@ -1,6 +1,11 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -21,6 +26,7 @@ class _UploadScreendsState extends State<UploadScreends> {
   Sumsel? sumsel;
   String? selectedKota;
   String? selectedStatus;
+  String? alamat;
   String? selectedDaerah;
   final List<String> kotaList = [];
   final List<String> daerahList = [];
@@ -110,7 +116,7 @@ class _UploadScreendsState extends State<UploadScreends> {
       compressedImagePath = base64Encode(compressedImage!);
     });
   }
-  
+
   void _showImagePickerOptions(BuildContext context) {
     // Reset image file when showing options
     showModalBottomSheet(
@@ -152,6 +158,74 @@ class _UploadScreendsState extends State<UploadScreends> {
     );
   }
 
+  Future<void> _sendDataSampah() async {
+    try {
+      final Position position = await Geolocator.getCurrentPosition(
+        locationSettings: LocationSettings(accuracy: LocationAccuracy.best),
+      );
+      await FirebaseFirestore.instance.collection('sampah').add({
+        'kota': selectedKota,
+        'status': selectedStatus,
+        'daerah': selectedDaerah,
+        'lokasi_detail': alamat,
+        'deskripsi': _deskripsiController.text,
+        'image': compressedImagePath, // Simpan gambar terkompresi
+        'latitude': position.latitude,
+        'longitude': position.longitude,
+        'cereated_at': FieldValue.serverTimestamp(),
+      }).then((value) async => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const HomeScreens(),
+            ),
+          ));
+    } catch (e) {
+      print('Error getting location: $e');
+      return Future.error('Error getting location: $e');
+    }
+  }
+
+  Future<String> getAddressFromCoordinates() async {
+    try {
+      final accessToken = dotenv.env['MAPBOX_ACCESS_TOKEN'];
+
+      if (accessToken == null || accessToken.isEmpty) {
+        return 'Token Mapbox tidak ditemukan';
+      }
+
+      final Position position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
+      );
+
+      final url = Uri.parse(
+        'https://api.mapbox.com/geocoding/v5/mapbox.places/${position.longitude},${position.latitude}.json?access_token=$accessToken',
+      );
+
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final features = data['features'];
+
+        if (features != null && features.isNotEmpty) {
+          final placeName = features[0]['place_name'];
+          setState(() {
+            alamat = placeName;
+          });
+          return placeName;
+        } else {
+          return 'Alamat tidak ditemukan';
+        }
+      } else {
+        return 'Gagal memuat data alamat. Kode: ${response.statusCode}';
+      }
+    } catch (e) {
+      return 'Terjadi kesalahan: $e';
+    }
+  }
+
   final List<String> status = [
     'Kosong',
     'Penuh',
@@ -164,6 +238,7 @@ class _UploadScreendsState extends State<UploadScreends> {
     loadData().then((_) {
       getKota();
     });
+    getAddressFromCoordinates();
   }
 
   @override
@@ -480,9 +555,8 @@ class _UploadScreendsState extends State<UploadScreends> {
                 ),
                 const SizedBox(height: 5),
                 Container(
-                  alignment: Alignment.topLeft,
                   width: double.infinity,
-                  height: MediaQuery.of(context).size.height * 0.05,
+                  padding: const EdgeInsets.all(10), // Tambah padding
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(10),
@@ -495,30 +569,18 @@ class _UploadScreendsState extends State<UploadScreends> {
                       )
                     ],
                   ),
-                  child: TextField(
-                    controller: _lokasiDetailController,
-                    maxLines: null,
-                    // agar tinggi bisa menyesuaikan teks
-                    textAlign: TextAlign.start,
+                  child: Text(
+                    alamat ?? 'Alamat tidak ditemukan',
+                    softWrap: true,
+                    textAlign: TextAlign
+                        .left, // Bisa juga TextAlign.justify jika mau rata
                     style: GoogleFonts.poppins(
                       fontSize: 15,
                       color: Colors.black.withOpacity(0.7),
                     ),
-                    decoration: InputDecoration(
-                      hintText: 'Masukkan Lokasi Detail',
-                      border: InputBorder.none,
-                      filled: true,
-                      fillColor: Colors.white,
-                      contentPadding: const EdgeInsets.all(15),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: const BorderSide(
-                          color: Colors.white,
-                        ),
-                      ),
-                    ), // beri jarak teks dari tepi
                   ),
                 ),
+
                 const SizedBox(height: 10),
                 Container(
                   width: double.infinity,
@@ -576,29 +638,32 @@ class _UploadScreendsState extends State<UploadScreends> {
                 ),
                 const SizedBox(height: 15),
                 GestureDetector(
+                    onTap: () async {
+                      await _sendDataSampah();
+                    },
                     child: Container(
-                  width: double.infinity,
-                  height: MediaQuery.of(context).size.height * 0.05,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF4E7CFE),
-                    borderRadius: BorderRadius.circular(10),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.25),
-                        blurRadius: 8,
-                        spreadRadius: 1,
-                        offset: const Offset(4, 8),
-                      )
-                    ],
-                  ),
-                  child: Center(
-                      child: Text('Upload',
-                          style: GoogleFonts.poppins(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.white,
-                          ))),
-                )),
+                      width: double.infinity,
+                      height: MediaQuery.of(context).size.height * 0.05,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF4E7CFE),
+                        borderRadius: BorderRadius.circular(10),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.25),
+                            blurRadius: 8,
+                            spreadRadius: 1,
+                            offset: const Offset(4, 8),
+                          )
+                        ],
+                      ),
+                      child: Center(
+                          child: Text('Upload',
+                              style: GoogleFonts.poppins(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.white,
+                              ))),
+                    )),
               ],
             ),
           ),
