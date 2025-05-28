@@ -41,3 +41,30 @@ class Sampah {
     );
   }
 }
+
+class Comments {
+  String? idRoom;
+  String? sampahId;
+  String? userId;
+  String? comment;
+  DateTime? createdAt;
+
+  Comments({
+    this.idRoom,
+    this.sampahId,
+    this.userId,
+    this.comment,
+    this.createdAt,
+  });
+
+  factory Comments.fromToJson(DocumentSnapshot data) {
+    final json = data.data() as Map<String, dynamic>;
+    return Comments(
+      idRoom: data.id,
+      sampahId: json['sampah_id'],
+      userId: json['user_id'],
+      comment: json['comment'],
+      createdAt: DateTime.tryParse(json['created_at'] ?? ''),
+    );
+  }
+}
