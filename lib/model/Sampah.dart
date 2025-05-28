@@ -45,6 +45,8 @@ class Sampah {
 class Comments {
   String? idRoom;
   String? sampahId;
+  String? userImage;
+  String? userName;
   String? userId;
   String? comment;
   DateTime? createdAt;
@@ -52,6 +54,8 @@ class Comments {
   Comments({
     this.idRoom,
     this.sampahId,
+    this.userImage,
+    this.userName,
     this.userId,
     this.comment,
     this.createdAt,
@@ -62,9 +66,10 @@ class Comments {
     return Comments(
       idRoom: data.id,
       sampahId: json['sampah_id'],
-      userId: json['user_id'],
+      userImage: json['user_image'],
+      userName: json['user_name'],
       comment: json['comment'],
-      createdAt: DateTime.tryParse(json['created_at'] ?? ''),
+      createdAt: (json['created_at'] as Timestamp?)?.toDate(),
     );
   }
 }

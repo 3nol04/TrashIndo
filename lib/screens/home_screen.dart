@@ -42,12 +42,11 @@ Future<void> _getUser() async {
     if (userData != null) {
       setState(() {
         _name = userData.name;
-        // imageProfile = userData.imageProfile; // uncomment jika ada
+        _imageProfile = userData.image; // uncomment jika ada
       });
     }
   }
 }
-
 
   Future<void> _requestLocation() async {
     // Memeriksa apakah lokasi diaktifkan
