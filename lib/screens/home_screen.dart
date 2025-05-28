@@ -1,29 +1,53 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart' as geo;
 import 'package:google_fonts/google_fonts.dart';
-import 'package:trashindo/model/dataSampah.dart';
+import 'package:trashindo/model/Sampah.dart';
 import 'package:trashindo/services/sampahServices.dart';
+import 'package:trashindo/services/userServices.dart';
 import 'package:trashindo/wigedts/card_category_wegidts.dart';
 import 'package:trashindo/wigedts/corosel_homepage_wigents.dart';
 import 'package:trashindo/wigedts/list_kotak_sampah_wegendsts.dart';
 
 class HomeScreens extends StatefulWidget {
-  const HomeScreens({super.key});
+  const HomeScreens({
+    super.key,
+  });
 
   @override
   State<HomeScreens> createState() => _HomeScreensState();
 }
 
 class _HomeScreensState extends State<HomeScreens> {
-  String imageProfile = '';
-  String name = '';
+  String _imageProfile = '';
+  String _name = '';
+  UserServices? user = UserServices();
+
   SampahServices sampah = SampahServices();
 
   @override
   void initState() {
     super.initState();
     _requestLocation();
+    _getUser();
   }
+
+
+
+Future<void> _getUser() async {
+  final currentUser = FirebaseAuth.instance.currentUser;
+  if (currentUser != null) {
+    final userData = await user?.getUser(currentUser.uid);
+
+    if (userData != null) {
+      setState(() {
+        _name = userData.name;
+        // imageProfile = userData.imageProfile; // uncomment jika ada
+      });
+    }
+  }
+}
+
 
   Future<void> _requestLocation() async {
     // Memeriksa apakah lokasi diaktifkan
@@ -72,9 +96,9 @@ class _HomeScreensState extends State<HomeScreens> {
                         width: 2,
                       ),
                     ),
-                    child: imageProfile.isNotEmpty
+                    child: _imageProfile.isNotEmpty
                         ? Image.asset(
-                            imageProfile,
+                            _imageProfile,
                             width: 30,
                             height: 30,
                           )
@@ -98,7 +122,7 @@ class _HomeScreensState extends State<HomeScreens> {
                           ),
                         ),
                         Text(
-                          name.isEmpty ? 'Guest' : name,
+                          _name.isEmpty ? 'Guest' : _name,
                           style: GoogleFonts.poppins(
                             fontSize: 15,
                             fontWeight: FontWeight.w300,
@@ -257,7 +281,7 @@ class _HomeScreensState extends State<HomeScreens> {
                                 itemBuilder: (context, index) {
                                   final item = snapshot.data![index];
                                   return ListKotakSampahWegendsts(
-                                    id : item.id ?? '',
+                                    id: item.id ?? '',
                                     status: item.status ?? 'Tidak ada status',
                                     image: item.image ?? '',
                                     daerah: item.daerah ?? 'Tidak ada daerah',

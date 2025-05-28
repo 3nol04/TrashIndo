@@ -31,7 +31,7 @@ class _ListKotakSampahWegendstsState extends State<ListKotakSampahWegendsts> {
       child: GestureDetector(
         onTap: () async {
           await Navigator.push(context,
-              MaterialPageRoute(builder: (context) =>  DetailScreens( id : widget.id)));
+              MaterialPageRoute(builder: (context) =>  DetailScreens( idSampah : widget.id)));
         },
         child: Container(
             width: double.infinity,

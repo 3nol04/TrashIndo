@@ -29,6 +29,8 @@ Future<void> _setUp() async {
 class MainApp extends StatelessWidget {
   const MainApp({super.key});
   @override
+
+  
   Widget build(BuildContext context) {
     return const MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -36,8 +38,8 @@ class MainApp extends StatelessWidget {
           //body: Splashscreen(),
           //body: OnboardingScreen()
         // body: LoginScreens(),
-          //body: HomeScreens(),
-         body: UploadScreends(),
+          body: HomeScreens(),
+         //body: UploadScreends(),
           //body: DetailScreens()
         ));
   }

@@ -1,27 +1,31 @@
 import 'dart:convert';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart' as geo;
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' as mp;
-import 'package:trashindo/model/dataSampah.dart';
+import 'package:trashindo/model/Sampah.dart';
 import 'package:trashindo/screens/home_screen.dart';
 import 'package:trashindo/services/sampahServices.dart';
+import 'package:trashindo/services/userServices.dart';
 import 'package:trashindo/wigedts/fonts_wigedts.dart';
 
 class DetailScreens extends StatefulWidget {
-  DetailScreens({super.key, required this.id});
-  String id;
+  DetailScreens({super.key, required this.idSampah});
+  String idSampah;
   @override
   State<DetailScreens> createState() => _DetailScreenstState();
 }
 
 class _DetailScreenstState extends State<DetailScreens> {
   SampahServices sampahServices = SampahServices();
+  UserServices userServices = UserServices();
   Sampah? _sampah;
   bool _panelVisible = false;
   bool _marksBooks = false;
   double? _latitude, _longitude;
+  String? _idSampah, _idUser, _name, _imageProfile;
   final TextEditingController _commentController = TextEditingController();
   double _height = 0.19;
   final FocusNode _focusNode = FocusNode();
@@ -36,7 +40,6 @@ class _DetailScreenstState extends State<DetailScreens> {
   void initState() {
     super.initState();
     _getPosition();
-    _setScreen();
     _focusNode.addListener(() {
       if (_focusNode.hasFocus) {
         setState(() {
@@ -52,10 +55,25 @@ class _DetailScreenstState extends State<DetailScreens> {
 
   Future<void> _setScreen() async {
     try {
-      final dataSampah = await sampahServices.getSampah(widget.id);
+      final currentUser = FirebaseAuth.instance.currentUser;
+      final dataSampah = await sampahServices.getSampah(widget.idSampah);
+      if (currentUser != null) {
+        final userData = await userServices?.getUser(currentUser.uid);
+
+        if (userData != null) {
+          setState(() {
+            _idUser = currentUser.uid;
+            _name = userData.name;
+            // imageProfile = userData.imageProfile; // uncomment jika ada
+          });
+        }
+      }
       setState(() {
         _sampah = dataSampah;
+        _idSampah = dataSampah.id;
       });
+      print('Tampil id sampah: $_idSampah');
+      print('Tampil data sampah: $_name');
     } catch (e) {
       print('Gagal mengambil data sampah: $e');
     }
@@ -67,8 +85,6 @@ class _DetailScreenstState extends State<DetailScreens> {
       _panelVisible = !_panelVisible;
     });
   }
-
-//Premesensi lokasi ke hp user
 
   Future<void> _getPosition() async {
     geo.Geolocator.getPositionStream(
@@ -109,7 +125,7 @@ class _DetailScreenstState extends State<DetailScreens> {
       _map?.easeTo(
         mp.CameraOptions(
           center: poin,
-          zoom: 10,
+          zoom: 14,
         ),
         mp.MapAnimationOptions(duration: 1),
       );
@@ -147,7 +163,7 @@ class _DetailScreenstState extends State<DetailScreens> {
     _map?.easeTo(
       mp.CameraOptions(
         center: tujuan,
-        zoom: 12,
+        zoom: 10,
       ),
       mp.MapAnimationOptions(duration: 1),
     );
@@ -155,17 +171,18 @@ class _DetailScreenstState extends State<DetailScreens> {
 
   void _onMapCreated(mp.MapboxMap mapboxMap) async {
     _map = mapboxMap;
-
-  
+    await _setScreen();
     _markUser ??= await _map!.annotations.createPointAnnotationManager();
     _markTujuan ??= await _map!.annotations.createPointAnnotationManager();
+
     if (_sampah?.latitude! != null && _sampah?.longitude! != null) {
       setState(() {
-        _latitude = _sampah!.latitude!;
-        _longitude = _sampah!.longitude!;
+        _latitude = _sampah?.latitude!;
+        _longitude = _sampah?.longitude!;
+        _idSampah = _sampah?.id!;
       });
-    }
       tampilkanTujuan(_latitude!, _longitude!);
+    }
   }
 
   @override
@@ -173,7 +190,8 @@ class _DetailScreenstState extends State<DetailScreens> {
     // Clear all annotations
     _markUser?.deleteAll();
     _markTujuan?.deleteAll();
-
+    _latitude = null;
+    _longitude = null;
     // Dispose the map
     _map = null;
     _focusNode.dispose();

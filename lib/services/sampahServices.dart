@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:trashindo/model/dataSampah.dart';
+import 'package:trashindo/model/Sampah.dart';
 
 class SampahServices {
   Future<List<Sampah>> getAllTempatSampah() async {
@@ -15,4 +15,16 @@ class SampahServices {
         await FirebaseFirestore.instance.collection('sampah').doc(id).get();
     return Sampah.fromJson(data);
   }
+
+  Future <void> deleteSampah(String id) async {
+    await FirebaseFirestore.instance.collection('sampah').doc(id).delete();
+  }
+
+ Future <void> updateSampah(String id, Map<String, dynamic> data) async {
+    await FirebaseFirestore.instance.collection('sampah').doc(id).update(data);
+ } 
+
+ Future <void> addcommentSampah (String id, Map<String, dynamic> data) async {
+    await FirebaseFirestore.instance.collection('sampah').doc(id).collection('comment').add(data);
+ }
 }

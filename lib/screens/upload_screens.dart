@@ -10,7 +10,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/services.dart' show rootBundle;
-import 'package:trashindo/model/data_daerah.dart';
+import 'package:trashindo/model/Daerah.dart';
 import 'package:trashindo/screens/home_screen.dart';
 
 class UploadScreends extends StatefulWidget {
@@ -21,7 +21,6 @@ class UploadScreends extends StatefulWidget {
 }
 
 class _UploadScreendsState extends State<UploadScreends> {
-  final TextEditingController _lokasiDetailController = TextEditingController();
   final TextEditingController _deskripsiController = TextEditingController();
   Sumsel? sumsel;
   String? selectedKota;
@@ -240,6 +239,13 @@ class _UploadScreendsState extends State<UploadScreends> {
     });
     getAddressFromCoordinates();
   }
+@override
+  void dispose() {
+    // TODO: implement dispose
+    _deskripsiController.dispose();
+    super.dispose();
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -261,7 +267,7 @@ class _UploadScreendsState extends State<UploadScreends> {
                   children: [
                     GestureDetector(
                       onTap: () {
-                        Navigator.push(context,
+                        Navigator.pushReplacement(context,
                             MaterialPageRoute(builder: (context) {
                           return const HomeScreens();
                         }));
