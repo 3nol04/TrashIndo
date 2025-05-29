@@ -13,14 +13,14 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:trashindo/model/Daerah.dart';
 import 'package:trashindo/screens/home_screen.dart';
 
-class UploadScreends extends StatefulWidget {
-  const UploadScreends({super.key});
+class UploadScreens extends StatefulWidget {
+  const UploadScreens({super.key});
 
   @override
-  State<UploadScreends> createState() => _UploadScreendsState();
+  State<UploadScreens> createState() => _UploadScreensState();
 }
 
-class _UploadScreendsState extends State<UploadScreends> {
+class _UploadScreensState extends State<UploadScreens> {
   final TextEditingController _deskripsiController = TextEditingController();
   Sumsel? sumsel;
   String? selectedKota;

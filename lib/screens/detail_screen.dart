@@ -54,32 +54,31 @@ class _DetailScreenstState extends State<DetailScreens> {
     });
   }
 
-Future<void> _setScreen() async {
-  try {
-    final currentUser = FirebaseAuth.instance.currentUser;
-    final dataSampah = await sampahServices.getSampah(widget.idSampah);
+  Future<void> _setScreen() async {
+    try {
+      final currentUser = FirebaseAuth.instance.currentUser;
+      final dataSampah = await sampahServices.getSampah(widget.idSampah);
 
-    if (currentUser != null) {
-      final userData = await userServices.getUser(currentUser.uid);
+      if (currentUser != null) {
+        final userData = await userServices.getUser(currentUser.uid);
 
-      if (userData != null) {
-        setState(() {
-          _idUser = currentUser.uid;
-          _name = userData.name ?? 'Tanpa Nama';
-          _imageProfile = userData.image ?? '';
-        });
+        if (userData != null) {
+          setState(() {
+            _idUser = currentUser.uid;
+            _name = userData.name ?? 'Tanpa Nama';
+            _imageProfile = userData.image ?? '';
+          });
+        }
       }
+
+      setState(() {
+        _sampah = dataSampah;
+        _idSampah = dataSampah.id;
+      });
+    } catch (e) {
+      print('Gagal mengambil data sampah: $e');
     }
-
-    setState(() {
-      _sampah = dataSampah;
-      _idSampah = dataSampah.id;
-    });
-  } catch (e) {
-    print('Gagal mengambil data sampah: $e');
   }
-}
-
 
   Future<void> _changeHeight() async {
     setState(() {
@@ -290,6 +289,46 @@ Future<void> _setScreen() async {
                         ),
                       )),
                 ),
+                if (_panelVisible == false)
+                  Positioned(
+                    left: sizeWidth * 0.84,
+                    bottom: sizeHeight * 0.26,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        SingleChildScrollView(
+                          child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 500),
+                              width: sizeWidth * 0.11,
+                              height: sizeHeight * 0.05,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(10),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.4),
+                                    blurRadius: 5,
+                                    spreadRadius: 2,
+                                    offset: const Offset(2, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Center(
+                                child: IconButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        _marksBooks = !_marksBooks;
+                                      });
+                                    },
+                                    icon: Icon(
+                                      Icons.edit_note_rounded,
+                                      size: 29,
+                                    )),
+                              )),
+                        ),
+                      ],
+                    ),
+                  ),
                 if (_panelVisible == false)
                   Positioned(
                     left: sizeWidth * 0.84,
@@ -561,13 +600,15 @@ Future<void> _setScreen() async {
                                                             children: [
                                                               CustomFont(
                                                                 title: comment
-                                                                    .userName ?? "",
-                                                                size: 15, 
+                                                                        .userName ??
+                                                                    "",
+                                                                size: 15,
                                                                 width: 0.5,
                                                               ),
                                                               CustomFont(
                                                                 title: comment
-                                                                    .comment ?? "",
+                                                                        .comment ??
+                                                                    "",
                                                                 size: 12,
                                                                 width: 0.8,
                                                               ),
