@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart' as geo;
 import 'package:google_fonts/google_fonts.dart';
 import 'package:trashindo/model/Sampah.dart';
+import 'package:trashindo/screens/search_screens.dart';
 import 'package:trashindo/services/sampahServices.dart';
 import 'package:trashindo/services/userServices.dart';
 import 'package:trashindo/wigedts/card_category_wegidts.dart';
@@ -143,45 +144,59 @@ class _HomeScreensState extends State<HomeScreens> {
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
                       // Search bar
-                      Container(
-                        height: MediaQuery.of(context).size.height * 0.06,
-                        decoration: BoxDecoration(
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
-                              blurRadius: 5,
-                              offset: const Offset(0, 3),
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const SearchScreens()),
+                            );
+                          },
+                          child: Container(
+                            height: MediaQuery.of(context).size.height * 0.06,
+                            decoration: BoxDecoration(
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.2),
+                                  blurRadius: 5,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(15),
                             ),
-                          ],
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        child: TextField(
-                          decoration: InputDecoration(
-                            hintText: 'Search',
-                            hintStyle: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w400,
-                              color: Colors.black,
-                            ),
-                            prefixIcon: Padding(
-                              padding:
-                                  const EdgeInsets.only(left: 15, right: 10),
-                              child: Icon(
-                                Icons.search,
-                                color: Colors.black,
-                                size: 20,
+                            child: IgnorePointer(
+                              child: TextField(
+                                decoration: InputDecoration(
+                                  hintText: 'Search',
+                                  hintStyle: const TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w400,
+                                    color: Colors.black,
+                                  ),
+                                  prefixIcon: const Padding(
+                                    padding:
+                                        EdgeInsets.only(left: 15, right: 10),
+                                    child: Icon(
+                                      Icons.search,
+                                      color: Colors.black,
+                                      size: 20,
+                                    ),
+                                  ),
+                                  prefixIconConstraints: const BoxConstraints(
+                                    minHeight: 20,
+                                    minWidth: 20,
+                                  ),
+                                  border: InputBorder.none,
+                                  isCollapsed: true,
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    vertical: 16,
+                                    horizontal: 0,
+                                  ),
+                                ),
                               ),
-                            ),
-                            prefixIconConstraints: const BoxConstraints(
-                              minHeight: 20,
-                              minWidth: 20,
-                            ),
-                            border: InputBorder.none,
-                            isCollapsed: true,
-                            contentPadding: const EdgeInsets.symmetric(
-                              vertical: 16,
-                              horizontal: 0,
                             ),
                           ),
                         ),

@@ -13,6 +13,8 @@ import 'package:trashindo/screens/profile_screens.dart';
 import 'package:trashindo/screens/search_screens.dart';
 import 'package:trashindo/screens/splash_screen.dart';
 import 'package:trashindo/screens/upload_screens.dart';
+import 'package:trashindo/screens/books_marks_screens.dart';
+
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -49,9 +51,9 @@ class _HomeState extends State<Home> {
 
   final List<Widget> _pages = [
     const HomeScreens(),
-    const SeacrchScreens(),
+    SearchScreens(),
     const UploadScreens(),
-    const MarkScreens(),
+    const BooksMarksScreens(),
     const ProfileScreen(),
   ];
 
