@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:trashindo/screens/log_in_screen.dart';
 import 'package:trashindo/services/userServices.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -15,6 +16,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _signOut() async {
     await FirebaseAuth.instance.signOut();
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginScreens()),
+    );
   }
 
   Future<void> _getUser() async {
@@ -141,8 +146,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             TextButton(
               child: const Text('Logout'),
               onPressed: () {
-                // Implement logout logic here
-                Navigator.of(context).pop(); // Close the dialog
+                _signOut(); // Close the dialog
               },
             ),
           ],
@@ -163,17 +167,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
-                'Foto Profil',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 16),
               ClipRRect(
-                borderRadius: BorderRadius.circular(100),
+                borderRadius: BorderRadius.circular(16),
                 child: Image.network(
                   imageUrl,
-                  width: 150,
-                  height: 150,
+                  width: 250,
+                  height: 250,
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) {
                     return const Icon(Icons.error,
@@ -187,7 +186,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               const SizedBox(height: 16),
               ElevatedButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
                 child: const Text('Tutup'),
               )
             ],

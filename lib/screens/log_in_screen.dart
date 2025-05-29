@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:trashindo/screens/home_screen.dart';
+import 'package:trashindo/main.dart';
 import 'package:trashindo/screens/sign_up_screen.dart';
 import 'package:trashindo/wigedts/error_login_wigedts.dart';
 
@@ -45,22 +45,21 @@ class _LoginScreensState extends State<LoginScreens> {
     if (_errorMessage.isNotEmpty) {
       return;
     }
-    await FirebaseAuth.instance.signInWithEmailAndPassword(
+    await FirebaseAuth.instance
+        .signInWithEmailAndPassword(
       email: _emailController.text.trim(),
       password: _passwordController.text.trim(),
-    ).then((value) async {
+    )
+        .then((value) async {
       if (mounted) {
         await Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-                builder: (context) => const HomeScreens()));
+            context, MaterialPageRoute(builder: (context) => const Home()));
       }
     }).catchError((error) {
       setState(() {
         _errorMessage = error.toString();
       });
-    }
-    );
+    });
   }
 
   @override
@@ -331,7 +330,7 @@ class _LoginScreensState extends State<LoginScreens> {
                                                     bottom: 10),
                                                 child: ElevatedButton(
                                                   onPressed: () {
-                                                     _sendLoginRequest();
+                                                    _sendLoginRequest();
                                                     // fungsi untuk tombol log in
                                                   },
                                                   style: ButtonStyle(
