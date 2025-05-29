@@ -169,7 +169,6 @@ class _DetailScreenstState extends State<DetailScreens> {
       mp.MapAnimationOptions(duration: 1),
     );
   }
-
   void _onMapCreated(mp.MapboxMap mapboxMap) async {
     _map = mapboxMap;
     await _setScreen();
