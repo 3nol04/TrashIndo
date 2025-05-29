@@ -90,6 +90,7 @@ class _SingupscreensState extends State<Singupscreens> {
         .doc(idUser.user!.uid)
         .set({
       'name': 'guest', // default name for new user
+      'image' : '',
       'email': _emailController.text.trim(),
       'password': _passwordController.text.trim(),
       //role : user

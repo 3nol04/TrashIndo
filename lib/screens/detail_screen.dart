@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -57,23 +58,23 @@ class _DetailScreenstState extends State<DetailScreens> {
     try {
       final currentUser = FirebaseAuth.instance.currentUser;
       final dataSampah = await sampahServices.getSampah(widget.idSampah);
+
       if (currentUser != null) {
-        final userData = await userServices?.getUser(currentUser.uid);
+        final userData = await userServices.getUser(currentUser.uid);
 
         if (userData != null) {
           setState(() {
             _idUser = currentUser.uid;
-            _name = userData.name;
-            // imageProfile = userData.imageProfile; // uncomment jika ada
+            _name = userData.name ?? 'Tanpa Nama';
+            _imageProfile = userData.image ?? '';
           });
         }
       }
+
       setState(() {
         _sampah = dataSampah;
         _idSampah = dataSampah.id;
       });
-      print('Tampil id sampah: $_idSampah');
-      print('Tampil data sampah: $_name');
     } catch (e) {
       print('Gagal mengambil data sampah: $e');
     }
@@ -185,6 +186,32 @@ class _DetailScreenstState extends State<DetailScreens> {
     }
   }
 
+  Future<void> _sendComment() async {
+    final comment = _commentController.text.trim();
+    print('Komentar: $comment');
+    print("Tampil id sampah: $_idSampah");
+    if (comment.isNotEmpty) {
+      try {
+        await FirebaseFirestore.instance
+            .collection('sampah')
+            .doc(_idSampah)
+            .collection('comments')
+            .add({
+          'user_name': _name,
+          'user_id': _idUser, // pastikan _name adalah nama user, bukan UID
+          'comment': comment,
+          'user_image': _imageProfile,
+          'created_at': FieldValue.serverTimestamp(),
+        });
+
+        _commentController.clear();
+      } catch (e) {
+        print('Gagal mengirim komentar: $e');
+        // Tambahkan error handling UI jika perlu
+      }
+    }
+  }
+
   @override
   void dispose() {
     // Clear all annotations
@@ -262,6 +289,46 @@ class _DetailScreenstState extends State<DetailScreens> {
                         ),
                       )),
                 ),
+                if (_panelVisible == false)
+                  Positioned(
+                    left: sizeWidth * 0.84,
+                    bottom: sizeHeight * 0.26,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        SingleChildScrollView(
+                          child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 500),
+                              width: sizeWidth * 0.11,
+                              height: sizeHeight * 0.05,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(10),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.4),
+                                    blurRadius: 5,
+                                    spreadRadius: 2,
+                                    offset: const Offset(2, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Center(
+                                child: IconButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        _marksBooks = !_marksBooks;
+                                      });
+                                    },
+                                    icon: Icon(
+                                      Icons.edit_note_rounded,
+                                      size: 29,
+                                    )),
+                              )),
+                        ),
+                      ],
+                    ),
+                  ),
                 if (_panelVisible == false)
                   Positioned(
                     left: sizeWidth * 0.84,
@@ -445,82 +512,119 @@ class _DetailScreenstState extends State<DetailScreens> {
                                   Flexible(
                                     child: Column(
                                       children: [
+                                        // FutureBuilder untuk menampilkan komentar dari Firestore
                                         Expanded(
-                                          child: ListView.builder(
-                                            padding: const EdgeInsets.symmetric(
-                                                vertical: 5),
-                                            itemCount: 10,
-                                            itemBuilder: (context, index) {
-                                              String profile = "";
-                                              return Container(
-                                                margin:
+                                          child: FutureBuilder<List<Comments>>(
+                                            future:
+                                                sampahServices.getAllComments(
+                                                    widget.idSampah),
+                                            builder: (context, snapshot) {
+                                              if (snapshot.connectionState ==
+                                                  ConnectionState.waiting) {
+                                                return Center(
+                                                    child:
+                                                        CircularProgressIndicator());
+                                              } else if (snapshot.hasError) {
+                                                return Center(
+                                                    child: Text(
+                                                        'Terjadi kesalahan: ${snapshot.error}'));
+                                              } else if (!snapshot.hasData ||
+                                                  snapshot.data!.isEmpty) {
+                                                return Center(
+                                                    child: Text(
+                                                        'Belum ada komentar'));
+                                              }
+
+                                              final comments = snapshot.data!;
+
+                                              return ListView.builder(
+                                                padding:
                                                     const EdgeInsets.symmetric(
+                                                        vertical: 5),
+                                                itemCount: comments.length,
+                                                itemBuilder: (context, index) {
+                                                  final comment =
+                                                      comments[index];
+                                                  final profile =
+                                                      comment.userImage ?? "";
+
+                                                  return Container(
+                                                    margin: const EdgeInsets
+                                                        .symmetric(
                                                         vertical: 5,
                                                         horizontal: 10),
-                                                padding:
-                                                    const EdgeInsets.all(8),
-                                                decoration: BoxDecoration(
-                                                  color: Color(0xFFDCE4A7),
-                                                  borderRadius:
-                                                      BorderRadius.circular(10),
-                                                ),
-                                                child: Row(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    profile == ""
-                                                        ? Icon(
-                                                            Icons
-                                                                .account_circle,
-                                                            size: 40)
-                                                        : Container(
-                                                            width: 30,
-                                                            height: 30,
-                                                            decoration:
-                                                                BoxDecoration(
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                          15),
-                                                              color:
-                                                                  Colors.grey,
-                                                              image:
-                                                                  DecorationImage(
-                                                                image:
-                                                                    AssetImage(
-                                                                        profile),
-                                                                fit: BoxFit
-                                                                    .cover,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                    SizedBox(width: 10),
-                                                    Expanded(
-                                                      child: Column(
-                                                        crossAxisAlignment:
-                                                            CrossAxisAlignment
-                                                                .start,
-                                                        children: [
-                                                          CustomFont(
-                                                            title: "Junaidi",
-                                                            size: 15,
-                                                            width: 0.5,
-                                                          ),
-                                                          CustomFont(
-                                                            title:
-                                                                "Komentar kedua yang sangat panjang untuk menguji scroll vertikal di Flutter.",
-                                                            size: 12,
-                                                            width: 0.8,
-                                                          ),
-                                                        ],
-                                                      ),
+                                                    padding:
+                                                        const EdgeInsets.all(8),
+                                                    decoration: BoxDecoration(
+                                                      color: Color(0xFFDCE4A7),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              10),
                                                     ),
-                                                  ],
-                                                ),
+                                                    child: Row(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        profile.isEmpty
+                                                            ? Icon(
+                                                                Icons
+                                                                    .account_circle,
+                                                                size: 40)
+                                                            : Container(
+                                                                width: 30,
+                                                                height: 30,
+                                                                decoration:
+                                                                    BoxDecoration(
+                                                                  borderRadius:
+                                                                      BorderRadius
+                                                                          .circular(
+                                                                              15),
+                                                                  color: Colors
+                                                                      .grey,
+                                                                  image:
+                                                                      DecorationImage(
+                                                                    image: NetworkImage(
+                                                                        profile),
+                                                                    fit: BoxFit
+                                                                        .cover,
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                        SizedBox(width: 10),
+                                                        Expanded(
+                                                          child: Column(
+                                                            crossAxisAlignment:
+                                                                CrossAxisAlignment
+                                                                    .start,
+                                                            children: [
+                                                              CustomFont(
+                                                                title: comment
+                                                                        .userName ??
+                                                                    "",
+                                                                size: 15,
+                                                                width: 0.5,
+                                                              ),
+                                                              CustomFont(
+                                                                title: comment
+                                                                        .comment ??
+                                                                    "",
+                                                                size: 12,
+                                                                width: 0.8,
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  );
+                                                },
                                               );
                                             },
                                           ),
                                         ),
+
+                                        // Panel input komentar
                                         if (_panelVisible)
                                           Padding(
                                             padding: const EdgeInsets.symmetric(
@@ -553,12 +657,11 @@ class _DetailScreenstState extends State<DetailScreens> {
                                                   textInputAction:
                                                       TextInputAction.send,
                                                   onSubmitted: (_) {
+                                                    _sendComment();
                                                     setState(() {
                                                       _commentController
                                                           .clear();
                                                     });
-                                                    print(
-                                                        'Test submit: ${_commentController.text}');
                                                   },
                                                 ),
                                               ),

@@ -32,22 +32,21 @@ class _HomeScreensState extends State<HomeScreens> {
     _getUser();
   }
 
+  Future<void> _getUser() async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser != null) {
+      final userData = await user?.getUser(currentUser.uid);
 
-
-Future<void> _getUser() async {
-  final currentUser = FirebaseAuth.instance.currentUser;
-  if (currentUser != null) {
-    final userData = await user?.getUser(currentUser.uid);
-
-    if (userData != null) {
-      setState(() {
-        _name = userData.name;
-        // imageProfile = userData.imageProfile; // uncomment jika ada
-      });
+      if (mounted) {
+        if (userData != null) {
+          setState(() {
+            _name = userData.name;
+            _imageProfile = userData.image; // uncomment jika ada
+          });
+        }
+      }
     }
   }
-}
-
 
   Future<void> _requestLocation() async {
     // Memeriksa apakah lokasi diaktifkan

@@ -24,7 +24,18 @@ class SampahServices {
     await FirebaseFirestore.instance.collection('sampah').doc(id).update(data);
  } 
 
- Future <void> addcommentSampah (String id, Map<String, dynamic> data) async {
-    await FirebaseFirestore.instance.collection('sampah').doc(id).collection('comment').add(data);
- }
+Future<List<Comments>> getAllComments(String idSampah) async {
+  final querySnapshot = await FirebaseFirestore.instance
+      .collection('sampah')
+      .doc(idSampah)
+      .collection('comments')
+      .get();
+
+  List<Comments> comments = querySnapshot.docs
+      .map((doc) => Comments.fromToJson(doc))
+      .toList();
+
+  return comments;
+}
+
 }
