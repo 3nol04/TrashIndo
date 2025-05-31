@@ -1,4 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:trashindo/main.dart';
+import 'package:trashindo/screens/log_in_screen.dart';
 
 class Splashscreen extends StatefulWidget {
   const Splashscreen({super.key});
@@ -13,6 +16,7 @@ class _SplashscreenState extends State<Splashscreen> {
   double _circleOpacity = 0.0;
   double _titleOpacity = 0.0;
   double _logoContaner = 1.2;
+  final _currentUser = FirebaseAuth.instance.currentUser?.email;
 
   @override
   void initState() {
@@ -41,19 +45,25 @@ class _SplashscreenState extends State<Splashscreen> {
             _daunOpacity = 1.0;
           });
         });
-        
+        Future.delayed(const Duration(milliseconds: 4000), () {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+                builder: (context) =>
+                    _currentUser == null ? LoginScreens() : Home()),
+          );
+        });
       });
-      setState(() {});
     });
   }
 
   @override
-
   void dispose() {
     super.dispose();
   }
+
   @override
-Widget build(BuildContext context) {
+  Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
           alignment: Alignment.bottomCenter,

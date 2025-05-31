@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -5,16 +6,13 @@ import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:trashindo/firebase_options.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:trashindo/screens/books_marks_screens.dart';
-import 'package:trashindo/screens/detail_screen.dart';
 import 'package:trashindo/screens/home_screen.dart';
-import 'package:trashindo/screens/log_in_screen.dart';
 import 'package:trashindo/screens/on_boarding_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trashindo/screens/profile_screens.dart';
 import 'package:trashindo/screens/search_screens.dart';
 import 'package:trashindo/screens/splash_screen.dart';
 import 'package:trashindo/screens/upload_screens.dart';
-import 'package:trashindo/screens/books_marks_screens.dart';
-
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,8 +31,42 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: Home(),
+      home: MainScreen(),
     );
+  }
+}
+
+class MainScreen extends StatefulWidget {
+  const MainScreen({super.key});
+
+  @override
+  _MainScreenState createState() => _MainScreenState();
+}
+
+class _MainScreenState extends State<MainScreen> {
+  bool? isInstalled;
+  @override
+  void initState() {
+    super.initState();
+    _checkInstallation();
+  }
+
+ void _checkInstallation() async {
+    final prefs = await SharedPreferences.getInstance();
+    bool? isInstalled = prefs.getBool('isInstalled');
+    if (isInstalled == null || !isInstalled) {
+      prefs.setBool('isInstalled', true);
+    }
+  }
+
+
+  @override
+  Widget build(BuildContext context) {
+    final userCurrent = FirebaseAuth.instance.currentUser;
+    if (userCurrent == null && isInstalled == true) {
+      return const OnboardingScreen();
+    }
+    return const Splashscreen();
   }
 }
 
