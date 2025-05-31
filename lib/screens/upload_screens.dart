@@ -171,6 +171,7 @@ class _UploadScreensState extends State<UploadScreens> {
         'image': compressedImagePath, // Simpan gambar terkompresi
         'latitude': position.latitude,
         'longitude': position.longitude,
+        'is_bookmarked': false,
         'cereated_at': FieldValue.serverTimestamp(),
       }).then((value) async => Navigator.push(
             context,
