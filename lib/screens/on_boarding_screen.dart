@@ -12,9 +12,9 @@ class OnboardingScreen extends StatefulWidget {
 class _OnboardingScreenState extends State<OnboardingScreen> {
   int currentIndex = 0;
   final List<String> _title = [
-    'Selamat Datang di TrashIndo',
-    'Laporkan dalam Sekejap',
+    'Seqeorkan dalam Sekejap',
     'Jadi Bagian dari Perubahan'
+    'Aksi Kecil, Dampak Besar'
   ];
 
   final List<String> _subtitle = [
