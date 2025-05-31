@@ -9,7 +9,6 @@ class SampahServices {
         querySnapshot.docs.map((data) => Sampah.fromJson(data)).toList();
     return dataSampah;
   }
-
   Future<Sampah> getSampah(String id) async {
     final data =
         await FirebaseFirestore.instance.collection('sampah').doc(id).get();

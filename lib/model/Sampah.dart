@@ -10,19 +10,21 @@ class Sampah {
   String? image;
   double? latitude;
   double? longitude;
+  bool isBookmarked;
   DateTime? createdAt;
 
   Sampah({
-    this.id,
-    this.kota,
-    this.status,
-    this.daerah,
-    this.lokasiDetail,
-    this.deskripsi,
-    this.image,
-    this.latitude,
-    this.longitude,
-    this.createdAt,
+    required this.id,
+    required this.kota,
+    required this.status,
+    required this.daerah,
+    required this.lokasiDetail,
+    required this.deskripsi,
+    required this.image,
+    required this.latitude,
+    required this.longitude,
+    required this.isBookmarked,
+    required this.createdAt,
   });
 
   factory Sampah.fromJson(DocumentSnapshot data) {
@@ -37,6 +39,7 @@ class Sampah {
       image: json['image'],
       latitude: (json['latitude'] as num?)?.toDouble(),
       longitude: (json['longitude'] as num?)?.toDouble(),
+      isBookmarked: (json['is_bookmarked'] as bool?) ?? false,
       createdAt: DateTime.tryParse(json['created_at'] ?? ''),
     );
   }
@@ -69,6 +72,36 @@ class Comments {
       userImage: json['user_image'],
       userName: json['user_name'],
       comment: json['comment'],
+      createdAt: (json['created_at'] as Timestamp?)?.toDate(),
+    );
+  }
+}
+
+class MarksBooks {
+  String? sampahId;
+  String? image;
+  String? location;
+  String? status;
+  String? daerah;
+  DateTime? createdAt;
+
+  MarksBooks({
+    this.sampahId,
+    this.image,
+    this.location,
+    this.status,
+    this.daerah,
+    this.createdAt,
+  });
+
+  factory MarksBooks.fromToJson(DocumentSnapshot data) {
+    final json = data.data() as Map<String, dynamic>;
+    return MarksBooks(
+      sampahId: json['sampah_id'] ?? '',
+      image: json['image'] ?? '',
+      location: json['location'] ?? '',
+      status: json['status'] ?? '',
+      daerah: json['daerah'] ?? '',
       createdAt: (json['created_at'] as Timestamp?)?.toDate(),
     );
   }
