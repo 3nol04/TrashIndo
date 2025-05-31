@@ -13,7 +13,10 @@ import 'package:trashindo/services/userServices.dart';
 import 'package:trashindo/wigedts/fonts_wigedts.dart';
 
 class DetailScreens extends StatefulWidget {
-  DetailScreens({super.key, required this.idSampah});
+  DetailScreens({
+    super.key,
+    required this.idSampah,
+  });
   String idSampah;
   @override
   State<DetailScreens> createState() => _DetailScreenstState();
@@ -41,6 +44,7 @@ class _DetailScreenstState extends State<DetailScreens> {
   void initState() {
     super.initState();
     _getPosition();
+
     _focusNode.addListener(() {
       if (_focusNode.hasFocus) {
         setState(() {
@@ -54,6 +58,7 @@ class _DetailScreenstState extends State<DetailScreens> {
     });
   }
 
+  Future<void> _getSampah() async {}
   Future<void> _setScreen() async {
     try {
       final currentUser = FirebaseAuth.instance.currentUser;
@@ -169,6 +174,7 @@ class _DetailScreenstState extends State<DetailScreens> {
       mp.MapAnimationOptions(duration: 1),
     );
   }
+
   void _onMapCreated(mp.MapboxMap mapboxMap) async {
     _map = mapboxMap;
     await _setScreen();
@@ -177,6 +183,7 @@ class _DetailScreenstState extends State<DetailScreens> {
 
     if (_sampah?.latitude! != null && _sampah?.longitude! != null) {
       setState(() {
+        _marksBooks = _sampah?.isBookmarked ?? true;
         _latitude = _sampah?.latitude!;
         _longitude = _sampah?.longitude!;
         _idSampah = _sampah?.id!;
@@ -187,8 +194,7 @@ class _DetailScreenstState extends State<DetailScreens> {
 
   Future<void> _sendComment() async {
     final comment = _commentController.text.trim();
-    print('Komentar: $comment');
-    print("Tampil id sampah: $_idSampah");
+
     if (comment.isNotEmpty) {
       try {
         await FirebaseFirestore.instance
@@ -208,6 +214,55 @@ class _DetailScreenstState extends State<DetailScreens> {
         print('Gagal mengirim komentar: $e');
         // Tambahkan error handling UI jika perlu
       }
+    }
+  }
+
+  Future<void> _booksMarks() async {
+    // Toggle nilai _marksBooks
+    setState(() {
+      _marksBooks = !_marksBooks;
+    });
+
+    try {
+      // Update is_bookmarked di koleksi sampah
+      await FirebaseFirestore.instance
+          .collection('sampah')
+          .doc(_idSampah)
+          .update({'is_bookmarked': _marksBooks});
+
+      // Jika bookmarked (is_bookmarked == true), tambahkan data ke marksbooks di users
+      if (_marksBooks) {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(_idUser)
+            .collection('marksbooks')
+            .doc() // Menambahkan dokumen baru di collection marksbooks
+            .set({
+          'sampah_id': _idSampah,
+          'image': _sampah?.image,
+          'location': _sampah?.lokasiDetail,
+          'status': _sampah?.status,
+          'is_bookmarked': _marksBooks,
+          'daerah': _sampah?.daerah,
+          'created_at': FieldValue.serverTimestamp(),
+        });
+      } else {
+        // Jika tidak di-bookmark, hapus data dari marksbooks di users
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(_idUser)
+            .collection('marksbooks')
+            .where('sampah_id', isEqualTo: _idSampah)
+            .get()
+            .then((querySnapshot) async {
+          // Menghapus setiap dokumen yang ditemukan
+          for (var doc in querySnapshot.docs) {
+            await doc.reference.delete();
+          }
+        });
+      }
+    } catch (e) {
+      print('Gagal mengirim komentar: $e');
     }
   }
 
@@ -315,9 +370,7 @@ class _DetailScreenstState extends State<DetailScreens> {
                               child: Center(
                                 child: IconButton(
                                     onPressed: () {
-                                      setState(() {
-                                        _marksBooks = !_marksBooks;
-                                      });
+                                      //TODO EDIT SAMPAH
                                     },
                                     icon: Icon(
                                       Icons.edit_note_rounded,
@@ -329,45 +382,68 @@ class _DetailScreenstState extends State<DetailScreens> {
                     ),
                   ),
                 if (_panelVisible == false)
-                  Positioned(
-                    left: sizeWidth * 0.84,
-                    bottom: sizeHeight * 0.2,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        SingleChildScrollView(
-                          child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 500),
-                              width: sizeWidth * 0.11,
-                              height: sizeHeight * 0.05,
-                              decoration: BoxDecoration(
-                                color:
-                                    _marksBooks ? Colors.yellow : Colors.white,
-                                borderRadius: BorderRadius.circular(10),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.4),
-                                    blurRadius: 5,
-                                    spreadRadius: 2,
-                                    offset: const Offset(2, 4),
-                                  ),
-                                ],
-                              ),
-                              child: Center(
-                                child: IconButton(
+                  FutureBuilder<Sampah>(
+                    future: sampahServices
+                        .getSampah(widget.idSampah), // Fetch Sampah data
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return Center(
+                            child:
+                                CircularProgressIndicator()); // Show loading indicator while data is being fetched
+                      } else if (snapshot.hasError) {
+                        return Center(
+                            child: Text(
+                                'Terjadi kesalahan: ${snapshot.error}')); // Show error message if fetching fails
+                      } else if (!snapshot.hasData || snapshot.data == null) {
+                        return Center(
+                            child: Text('Data sampah tidak ditemukan'));
+                      }
+
+                      // When data is successfully fetched
+                      _sampah = snapshot.data;
+
+                      return Positioned(
+                        left: sizeWidth * 0.84,
+                        bottom: sizeHeight * 0.2,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            SingleChildScrollView(
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 500),
+                                width: sizeWidth * 0.11,
+                                height: sizeHeight * 0.05,
+                                decoration: BoxDecoration(
+                                  color: _sampah?.isBookmarked == true
+                                      ? Colors.yellow
+                                      : Colors.white,
+                                  borderRadius: BorderRadius.circular(10),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.4),
+                                      blurRadius: 5,
+                                      spreadRadius: 2,
+                                      offset: const Offset(2, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: Center(
+                                  child: IconButton(
                                     onPressed: () {
-                                      setState(() {
-                                        _marksBooks = !_marksBooks;
-                                      });
+                                      _booksMarks(); // Toggle bookmark action
                                     },
                                     icon: Icon(
                                       Icons.bookmark_add_outlined,
                                       size: 29,
-                                    )),
-                              )),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
                 Positioned(
                   bottom: 0,
