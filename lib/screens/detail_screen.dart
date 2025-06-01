@@ -1,16 +1,18 @@
 import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart' as geo;
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' as mp;
-import 'package:trashindo/main.dart';
 import 'package:trashindo/model/Sampah.dart';
+import 'package:trashindo/screens/edit_sampah_screen.dart';
 import 'package:trashindo/screens/home_screen.dart';
 import 'package:trashindo/services/sampahServices.dart';
 import 'package:trashindo/services/userServices.dart';
 import 'package:trashindo/wigedts/fonts_wigedts.dart';
+
 
 class DetailScreens extends StatefulWidget {
   DetailScreens({
@@ -58,6 +60,7 @@ class _DetailScreenstState extends State<DetailScreens> {
     });
   }
 
+  Future<void> _getSampah() async {}
   Future<void> _setScreen() async {
     try {
       final currentUser = FirebaseAuth.instance.currentUser;
@@ -193,6 +196,7 @@ class _DetailScreenstState extends State<DetailScreens> {
 
   Future<void> _sendComment() async {
     final comment = _commentController.text.trim();
+
     if (comment.isNotEmpty) {
       try {
         await FirebaseFirestore.instance
@@ -280,6 +284,19 @@ class _DetailScreenstState extends State<DetailScreens> {
     super.dispose();
   }
 
+  Color getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'penuh':
+        return Colors.red;
+      case 'kosong':
+        return Colors.green;
+      case 'rusak':
+        return Colors.orange;
+      default:
+        return Colors.grey;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final sizeHeight = MediaQuery.of(context).size.height;
@@ -310,7 +327,7 @@ class _DetailScreenstState extends State<DetailScreens> {
                                 onPressed: () {
                                   Navigator.push(context,
                                       MaterialPageRoute(builder: (context) {
-                                    return const Home();
+                                    return const HomeScreens();
                                   }));
                                 },
                                 icon: Icon(Icons.arrow_back)),
@@ -367,13 +384,17 @@ class _DetailScreenstState extends State<DetailScreens> {
                               ),
                               child: Center(
                                 child: IconButton(
-                                    onPressed: () {
-                                      //TODO EDIT SAMPAH
-                                    },
-                                    icon: Icon(
-                                      Icons.edit_note_rounded,
-                                      size: 29,
-                                    )),
+                                  onPressed: () async {
+                                    await Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => EditSampahScreen(sampah: _sampah!),
+                                      ),
+                                    );
+                                    await _setScreen(); 
+                                  },
+                                  icon: Icon(Icons.edit_note_rounded, size: 29),
+                                ),
                               )),
                         ),
                       ],
@@ -396,8 +417,10 @@ class _DetailScreenstState extends State<DetailScreens> {
                         return Center(
                             child: Text('Data sampah tidak ditemukan'));
                       }
+
                       // When data is successfully fetched
                       _sampah = snapshot.data;
+
                       return Positioned(
                         left: sizeWidth * 0.84,
                         bottom: sizeHeight * 0.2,
@@ -524,11 +547,11 @@ class _DetailScreenstState extends State<DetailScreens> {
                                                     Expanded(
                                                       child: Row(
                                                         children: [
-                                                          Icon(
-                                                            Icons.circle,
-                                                            color: Colors.green,
-                                                            size: 15,
-                                                          ),
+Icon(
+  Icons.circle,
+  color: getStatusColor(_sampah?.status ?? ""),
+  size: 15,
+),
                                                           SizedBox(width: 5),
                                                           Flexible(
                                                             child: CustomFont(

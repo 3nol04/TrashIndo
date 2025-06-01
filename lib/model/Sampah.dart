@@ -40,7 +40,7 @@ class Sampah {
       latitude: (json['latitude'] as num?)?.toDouble(),
       longitude: (json['longitude'] as num?)?.toDouble(),
       isBookmarked: (json['is_bookmarked'] as bool?) ?? false,
-      createdAt: DateTime.tryParse(json['created_at'] ?? ''),
+      createdAt: (json['created_at'] as Timestamp?)?.toDate(),
     );
   }
 }
