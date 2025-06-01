@@ -1,10 +1,13 @@
 import 'dart:convert';
-
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart' as geo;
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trashindo/model/Sampah.dart';
+import 'package:trashindo/screens/carilawanchatscreen.dart';
 import 'package:trashindo/screens/search_screens.dart';
 import 'package:trashindo/services/sampahServices.dart';
 import 'package:trashindo/services/userServices.dart';
@@ -25,7 +28,6 @@ class _HomeScreensState extends State<HomeScreens> {
   String _imageProfile = '';
   String _name = '';
   UserServices? user = UserServices();
-
   SampahServices sampah = SampahServices();
 
   @override
@@ -33,6 +35,7 @@ class _HomeScreensState extends State<HomeScreens> {
     super.initState();
     _requestLocation();
     _getUser();
+    getTokenFCM(); // Mendapatkan token FCM
   }
 
   Future<void> _getUser() async {
@@ -44,7 +47,7 @@ class _HomeScreensState extends State<HomeScreens> {
         if (userData != null) {
           setState(() {
             _name = userData.name;
-            _imageProfile = userData.image; // uncomment jika ada
+            _imageProfile = userData.image; // uncomment if image exists
           });
         }
       }
@@ -52,7 +55,6 @@ class _HomeScreensState extends State<HomeScreens> {
   }
 
   Future<void> _requestLocation() async {
-    // Memeriksa apakah lokasi diaktifkan
     bool servicesEnabled = await geo.Geolocator.isLocationServiceEnabled();
     if (!servicesEnabled) return Future.error('Lokasi tidak diaktifkan.');
     geo.LocationPermission permission = await geo.Geolocator.checkPermission();
@@ -64,6 +66,63 @@ class _HomeScreensState extends State<HomeScreens> {
     }
     if (permission == geo.LocationPermission.deniedForever) {
       return Future.error('Izin lokasi permanen ditolak.');
+    }
+  }
+
+  Future<void> getTokenFCM() async {
+    try {
+      // Mendapatkan instance SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      String? token = prefs.getString('tokenFCM'); // Cek token yang sudah ada
+
+      // Mendapatkan instance FirebaseMessaging untuk mengelola notifikasi
+      FirebaseMessaging newToken = FirebaseMessaging.instance;
+
+      // Meminta izin notifikasi dari pengguna
+      NotificationSettings permission = await newToken.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+
+      // Menangani izin notifikasi
+      if (permission.authorizationStatus == AuthorizationStatus.authorized) {
+        print('User diberikan izin untuk menerima notifikasi');
+      } else if (permission.authorizationStatus ==
+          AuthorizationStatus.provisional) {
+        print('Pengguna diberikan izin sementara untuk menerima notifikasi');
+      } else {
+        print(
+            'Pengguna menolak atau belum menerima izin untuk menerima notifikasi');
+      }
+      final currentUser = FirebaseAuth.instance.currentUser;
+
+      if (currentUser != null) {
+        final userData = await user?.getUser(currentUser.uid);
+
+        if (userData != null) {
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(currentUser.uid)
+              .update({'tokenFCM': token});
+        } else {
+          print("Tidak ada data pengguna yang ditemukan.");
+        }
+
+        if (token == null) {
+          token = await newToken.getToken();
+          prefs.setString('tokenFCM', token!);
+          // Cetak token dan email
+          print("Token FCM : $token ");
+        } else {
+          print("Tidak ada pengguna yang terautentikasi.");
+        }
+      } else {
+        print("Tidak ada pengguna yang terautentikasi.");
+      }
+    } catch (e) {
+      // Tangani error jika terjadi masalah
+      print("Terjadi kesalahan: $e");
     }
   }
 
@@ -81,13 +140,10 @@ class _HomeScreensState extends State<HomeScreens> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Bagian profile (tetap di atas)
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  // Make sure to import this for base64Decode
-
                   Container(
                     alignment: Alignment.center,
                     height: 50,
@@ -102,7 +158,6 @@ class _HomeScreensState extends State<HomeScreens> {
                     ),
                     child: _imageProfile.isNotEmpty
                         ? ClipOval(
-                            // Clip the image to make it circular
                             child: Image.memory(
                               base64Decode(_imageProfile),
                               width: 40,
@@ -116,7 +171,6 @@ class _HomeScreensState extends State<HomeScreens> {
                             color: Colors.black,
                           ),
                   ),
-
                   const SizedBox(width: 10),
                   Expanded(
                     child: Column(
@@ -141,17 +195,46 @@ class _HomeScreensState extends State<HomeScreens> {
                       ],
                     ),
                   ),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SearchScreen(),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      height: MediaQuery.of(context).size.height * 0.06,
+                      width: MediaQuery.of(context).size.width * 0.16,
+                      decoration: BoxDecoration(
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            blurRadius: 5,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: Center(
+                        child: Icon(
+                          Icons.message_outlined,
+                          color: Colors.black,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 10),
-              // Bagian scrollable
               Expanded(
                 child: SingleChildScrollView(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.start,
                     children: [
-                      // Search bar
                       Padding(
                         padding: const EdgeInsets.all(16.0),
                         child: GestureDetector(
@@ -209,7 +292,6 @@ class _HomeScreensState extends State<HomeScreens> {
                           ),
                         ),
                       ),
-                      // Carousel
                       Padding(
                         padding: const EdgeInsets.only(top: 20),
                         child: Container(
@@ -229,7 +311,6 @@ class _HomeScreensState extends State<HomeScreens> {
                           child: Corousel(),
                         ),
                       ),
-                      // Status
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 10),
                         child: Text('Status',
@@ -265,7 +346,6 @@ class _HomeScreensState extends State<HomeScreens> {
                           ),
                         ),
                       ),
-                      // History
                       Padding(
                         padding: const EdgeInsets.only(top: 10),
                         child: SizedBox(
@@ -281,9 +361,10 @@ class _HomeScreensState extends State<HomeScreens> {
                         ),
                       ),
                       SizedBox(
-                        height: 300, // atur tinggi sesuai kebutuhan
+                        height: MediaQuery.of(context).size.height * 0.3,
                         child: FutureBuilder<List<Sampah>>(
-                          future: sampah.getAllTempatSampah(),
+                          future: sampah
+                              .getAllTempatSampah(), // Future method from SampahServices
                           builder: (context, snapshot) {
                             if (snapshot.connectionState ==
                                 ConnectionState.waiting) {

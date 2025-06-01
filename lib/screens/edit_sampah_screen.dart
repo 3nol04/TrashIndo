@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:trashindo/model/Sampah.dart';
 import 'package:trashindo/services/sampahServices.dart';
+import 'package:geolocator/geolocator.dart'; // Import geolocator
+import 'package:http/http.dart' as http; // Import http for Mapbox API
+import 'package:flutter_dotenv/flutter_dotenv.dart'; // Import dotenv for environment variables
 
 class EditSampahScreen extends StatefulWidget {
   final Sampah sampah;
@@ -22,13 +25,15 @@ class _EditSampahScreenState extends State<EditSampahScreen> {
   late String _status;
   Uint8List? _imageBytes;
   bool _loading = false;
+  String alamat = ''; // Variable to store address
 
   @override
   void initState() {
+    super.initState();
     _deskripsiController = TextEditingController(text: widget.sampah.deskripsi);
     _lokasiController = TextEditingController(text: widget.sampah.lokasiDetail);
     _status = widget.sampah.status ?? "Kosong";
-    super.initState();
+    _getAddressFromCoordinates(); // Fetch the address when the screen is loaded
   }
 
   @override
@@ -84,13 +89,61 @@ class _EditSampahScreenState extends State<EditSampahScreen> {
         SnackBar(content: Text("Data berhasil diperbarui")),
       );
 
-      Navigator.pop(context); 
+      Navigator.pop(context); // Close the screen after saving
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Gagal memperbarui data: $e")),
       );
     } finally {
       setState(() => _loading = false);
+    }
+  }
+
+  // Function to get address from coordinates
+  Future<void> _getAddressFromCoordinates() async {
+    try {
+      final accessToken = dotenv.env['MAPBOX_ACCESS_TOKEN'];
+
+      if (accessToken == null || accessToken.isEmpty) {
+        return;
+      }
+
+      final Position position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
+      );
+
+      final url = Uri.parse(
+        'https://api.mapbox.com/geocoding/v5/mapbox.places/${position.longitude},${position.latitude}.json?access_token=$accessToken',
+      );
+
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final features = data['features'];
+
+        if (features != null && features.isNotEmpty) {
+          final placeName = features[0]['place_name'];
+          setState(() {
+            alamat = placeName;
+            _lokasiController.text = placeName; // Set the location text field
+          });
+        } else {
+          setState(() {
+            alamat = 'Alamat tidak ditemukan';
+          });
+        }
+      } else {
+        setState(() {
+          alamat = 'Gagal memuat data alamat. Kode: ${response.statusCode}';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        alamat = 'Terjadi kesalahan: $e';
+      });
     }
   }
 
@@ -121,8 +174,7 @@ class _EditSampahScreenState extends State<EditSampahScreen> {
                               : Container(
                                   height: 150,
                                   color: Colors.grey[300],
-                                  child: Center(child: Text("Klik untuk pilih gambar")),
-                                ),
+                                  child: Center(child: Text("Klik untuk pilih gambar"))),
                     ),
                     SizedBox(height: 20),
                     TextFormField(

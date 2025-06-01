@@ -9,6 +9,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:trashindo/main.dart';
 import 'package:trashindo/model/Daerah.dart';
 import 'package:trashindo/screens/home_screen.dart';
 
@@ -175,7 +176,7 @@ class _UploadScreensState extends State<UploadScreens> {
       }).then((value) async => Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => const HomeScreens(),
+              builder: (context) => const Home(),
             ),
           ));
     } catch (e) {

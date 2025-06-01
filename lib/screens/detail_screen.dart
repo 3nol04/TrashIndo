@@ -13,7 +13,6 @@ import 'package:trashindo/services/sampahServices.dart';
 import 'package:trashindo/services/userServices.dart';
 import 'package:trashindo/wigedts/fonts_wigedts.dart';
 
-
 class DetailScreens extends StatefulWidget {
   DetailScreens({
     super.key,
@@ -286,11 +285,11 @@ class _DetailScreenstState extends State<DetailScreens> {
 
   Color getStatusColor(String status) {
     switch (status.toLowerCase()) {
-      case 'penuh':
+      case 'rusak':
         return Colors.red;
       case 'kosong':
         return Colors.green;
-      case 'rusak':
+      case 'penuh':
         return Colors.orange;
       default:
         return Colors.grey;
@@ -388,10 +387,11 @@ class _DetailScreenstState extends State<DetailScreens> {
                                     await Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => EditSampahScreen(sampah: _sampah!),
+                                        builder: (context) =>
+                                            EditSampahScreen(sampah: _sampah!),
                                       ),
                                     );
-                                    await _setScreen(); 
+                                    await _setScreen();
                                   },
                                   icon: Icon(Icons.edit_note_rounded, size: 29),
                                 ),
@@ -547,11 +547,13 @@ class _DetailScreenstState extends State<DetailScreens> {
                                                     Expanded(
                                                       child: Row(
                                                         children: [
-Icon(
-  Icons.circle,
-  color: getStatusColor(_sampah?.status ?? ""),
-  size: 15,
-),
+                                                          Icon(
+                                                            Icons.circle,
+                                                            color: getStatusColor(
+                                                                _sampah?.status ??
+                                                                    ""),
+                                                            size: 15,
+                                                          ),
                                                           SizedBox(width: 5),
                                                           Flexible(
                                                             child: CustomFont(
@@ -678,8 +680,11 @@ Icon(
                                                                       .grey,
                                                                   image:
                                                                       DecorationImage(
-                                                                    image: NetworkImage(
-                                                                        profile),
+                                                                    image: Image
+                                                                        .memory(
+                                                                      base64Decode(
+                                                                          profile),
+                                                                    ).image,
                                                                     fit: BoxFit
                                                                         .cover,
                                                                   ),

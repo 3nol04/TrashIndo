@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:trashindo/screens/log_in_screen.dart';
+import 'package:trashindo/main.dart';
 import 'package:trashindo/wigedts/on_boarding_wigedts.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -13,7 +13,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   int currentIndex = 0;
   final List<String> _title = [
     'Seqeorkan dalam Sekejap',
-    'Jadi Bagian dari Perubahan'
+    'Jadi Bagian dari Perubahan',
     'Aksi Kecil, Dampak Besar'
   ];
 
@@ -155,8 +155,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
-                                          builder: (context) =>
-                                              const LoginScreens(),
+                                          builder: (context) => const Home(),
                                         ),
                                       );
                                     }

@@ -68,7 +68,11 @@ class _ListKotakSampahWegendstsState extends State<ListKotakSampahWegendsts> {
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
                           return const Center(
-                            child: Icon(Icons.error, color: Colors.red),
+                            child: Icon(
+                              Icons.image_not_supported_outlined,
+                              color: Colors.black54,
+                              size: 30,
+                            ),
                           );
                         },
                       ),

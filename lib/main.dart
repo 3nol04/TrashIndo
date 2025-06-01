@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
@@ -44,28 +45,13 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  bool? isInstalled;
   @override
   void initState() {
     super.initState();
-    _checkInstallation();
   }
-
- void _checkInstallation() async {
-    final prefs = await SharedPreferences.getInstance();
-    bool? isInstalled = prefs.getBool('isInstalled');
-    if (isInstalled == null || !isInstalled) {
-      prefs.setBool('isInstalled', true);
-    }
-  }
-
 
   @override
   Widget build(BuildContext context) {
-    final userCurrent = FirebaseAuth.instance.currentUser;
-    if (userCurrent == null && isInstalled == true) {
-      return const OnboardingScreen();
-    }
     return const Splashscreen();
   }
 }
@@ -80,6 +66,7 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   final GlobalKey<CurvedNavigationBarState> _bottomNavigationKey = GlobalKey();
   int _currentIndex = 0;
+  bool? isFirstTimeLogin;
 
   final List<Widget> _pages = [
     const HomeScreens(),
@@ -90,7 +77,42 @@ class _HomeState extends State<Home> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _checkFirstTimeLogin();
+  }
+
+  // Fungsi untuk memeriksa apakah ini adalah login pertama kali
+  _checkFirstTimeLogin() async {
+    final prefs = await SharedPreferences.getInstance();
+    bool? firstTime = prefs.getBool('isFirstTimeLogin');
+
+    // Jika tidak ada status isFirstTimeLogin, maka ini adalah login pertama kali
+    if (firstTime == null || firstTime == true) {
+      // Tandai bahwa user sudah lewat onboarding
+      await prefs.setBool('isFirstTimeLogin', false);
+      setState(() {
+        isFirstTimeLogin = true;
+      });
+    } else {
+      setState(() {
+        isFirstTimeLogin = false;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    // Periksa apakah pengguna sudah login
+    if (FirebaseAuth.instance.currentUser == null) {
+      return const OnboardingScreen(); // Jika belum login, tampilkan Onboarding
+    }
+
+    // Jika ini adalah login pertama kali, tampilkan Onboarding
+    if (isFirstTimeLogin == true) {
+      return const OnboardingScreen();
+    }
+
     return Scaffold(
       body: _pages[_currentIndex],
       bottomNavigationBar: CurvedNavigationBar(
