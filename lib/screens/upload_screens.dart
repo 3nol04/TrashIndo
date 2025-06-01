@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:geolocator/geolocator.dart';
@@ -318,7 +317,7 @@ class _UploadScreensState extends State<UploadScreens> {
                                     offset: const Offset(4, 8),
                                   )
                                 ],
-                                image: DecorationImage(
+                                image : DecorationImage(
                                   image: FileImage(_imageFile!),
                                   fit: BoxFit.cover,
                                 ),

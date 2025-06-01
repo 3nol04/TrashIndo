@@ -1,7 +1,9 @@
+import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:trashindo/model/Sampah.dart';
 import 'package:trashindo/screens/detail_screen.dart';
+
 
 class CategoryScreen extends StatelessWidget {
   final String status;
@@ -61,14 +63,14 @@ class CategoryScreen extends StatelessWidget {
                                     true)
                             ? ClipRRect(
                                 borderRadius: BorderRadius.circular(8),
-                                child: Image.network(
-                                  sampah.image!,
+                                child: Image.memory(
+                                  base64Decode(sampah.image!),
                                   width: 50,
                                   height: 50,
                                   fit: BoxFit.cover,
                                   errorBuilder: (context, error, stackTrace) =>
-                                      const Icon(Icons.error),
-                                ),
+                                      const Icon(Icons.image_not_supported),
+                                )
                               )
                             : const Icon(Icons.image_not_supported, size: 40),
                         const SizedBox(width: 10),
