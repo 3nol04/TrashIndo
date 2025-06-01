@@ -21,6 +21,28 @@ class HelpSupportScreen extends StatelessWidget {
     }
   }
 
+  Future <void> sendEmail(BuildContext context, String email) async {
+    final Uri emailUrl = Uri(
+      scheme: 'mailto',
+      path: email,
+      queryParameters: {
+        'subject': 'Help_And_Support_Request',
+        'body': '',
+      },
+    );
+    bool canOpen = await launchUrl(emailUrl);
+    if (canOpen) {
+      await launchUrl(emailUrl);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text(
+                'Could not open email client. Please check your app configuration.')),
+      );
+    }
+  }
+
+
   // Dialog untuk chat WhatsApp
   void showChatDialog(BuildContext context) {
     final TextEditingController messageController = TextEditingController();
@@ -130,10 +152,11 @@ class HelpSupportScreen extends StatelessWidget {
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: () {
-                      // Tambahkan navigasi ke chat atau email
+                      // Navigasi ke email client
+                      sendEmail(context, 'm3.setianto@gmail.com');
                     },
-                    icon: const Icon(Icons.whatshot_outlined),
-                    label: const Text('Live Chat'),
+                    icon: const Icon(Icons.email_outlined, size: 23),
+                    label: const Text('Email Us'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green[600],
                       padding: const EdgeInsets.symmetric(vertical: 14),
@@ -147,7 +170,11 @@ class HelpSupportScreen extends StatelessWidget {
                       // Navigasi ke WhatsApp chat
                       showChatDialog(context);
                     },
-                    icon: const Icon(Icons.email_outlined),
+                    icon:  Image.asset(
+                      'assets/images/postElment.png',
+                      width: 24,
+                      height: 24,
+                    ),  
                     label: const Text('WhatApp Us'),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
@@ -181,4 +208,4 @@ class HelpSupportScreen extends StatelessWidget {
   }
 }
 
-class FLutterLauncher {}
+

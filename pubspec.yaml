@@ -38,5 +38,4 @@ flutter:
     - assets/images/trashimg/
     - assets/svg/
     - assets/data/
-    - assets/images/icone/
     - .env
