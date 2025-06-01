@@ -1,8 +1,7 @@
-import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:trashindo/model/Sampah.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:trashindo/screens/detail_screen.dart';
 import 'package:trashindo/wigedts/list_kotak_sampah_wegendsts.dart';
 
 class SearchScreens extends StatefulWidget {

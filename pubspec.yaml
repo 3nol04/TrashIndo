@@ -1,6 +1,6 @@
 name: trashindo
 description: "A new Flutter project."
-publish_to: 'none'
+publish_to: "none"
 version: 0.1.0
 
 environment:
@@ -16,7 +16,6 @@ dependencies:
   google_fonts: ^6.2.1
   image_picker: ^1.1.2
   mapbox_maps_flutter: ^2.8.0
-  flutter_keyboard_visibility: ^6.0.0
   firebase_core: ^3.13.1
   firebase_auth: ^5.5.4
   firebase_storage: ^12.4.6
@@ -24,8 +23,7 @@ dependencies:
   http: ^1.4.0
   curved_navigation_bar: ^1.0.6
   shared_preferences: ^2.5.3
-  
-  
+  url_launcher: ^6.0.10
 
 dev_dependencies:
   flutter_test:

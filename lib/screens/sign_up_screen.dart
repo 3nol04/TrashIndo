@@ -95,6 +95,7 @@ class _SingupscreensState extends State<Singupscreens> {
       'password': _passwordController.text.trim(),
       //role : user
       'createdAt': Timestamp.now(),
+      
     }).then((value) async {
       await Navigator.pushReplacement(context,
           MaterialPageRoute(builder: (context) => const LoginScreens()));

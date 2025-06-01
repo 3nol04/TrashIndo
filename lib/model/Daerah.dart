@@ -1,4 +1,4 @@
-import 'dart:convert';
+
 class Sumsel {
   final String provinsi;
   final List<Kota> kota;

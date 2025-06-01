@@ -1,8 +1,6 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:trashindo/screens/detail_screen.dart';
 import 'package:trashindo/model/Sampah.dart';
 import 'package:trashindo/wigedts/list_kotak_sampah_wegendsts.dart';
 
@@ -67,12 +65,12 @@ class _BooksMarksScreensState extends State<BooksMarksScreens> {
                     final _bookNark = _dataBookmarks[index];
 
                     return ListKotakSampahWegendsts(
-                        id: _bookNark.sampahId??'', 
-                        status: _bookNark.status??'',
-                        image: _bookNark.image??'',
-                        daerah: _bookNark.daerah??'',
-                        deskripsi: _bookNark.daerah ??'',
-                       );
+                      id: _bookNark.sampahId ?? '',
+                      status: _bookNark.status ?? '',
+                      image: _bookNark.image ?? '',
+                      daerah: _bookNark.daerah ?? '',
+                      deskripsi: _bookNark.daerah ?? '',
+                    );
                   },
                 ),
     );

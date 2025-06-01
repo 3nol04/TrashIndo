@@ -1,6 +1,10 @@
+import 'dart:convert';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:trashindo/screens/helpandsupport.dart';
 import 'package:trashindo/screens/log_in_screen.dart';
+import 'package:trashindo/screens/edit_profile.dart';
 import 'package:trashindo/services/userServices.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -12,37 +16,36 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   UserServices userServices = UserServices();
-  String? _name, _profileImage, _email;
+  String? _name, _profileImage, _email, _userId;
 
   Future<void> _signOut() async {
     await FirebaseAuth.instance.signOut();
-    Navigator.pushReplacement(
+    Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (context) => const LoginScreens()),
+      (route) => false,
     );
   }
 
   Future<void> _getUser() async {
-    final curretUser = await FirebaseAuth.instance.currentUser;
-    if (curretUser != null) {
-      final userData = await userServices.getUser(curretUser.uid);
+    final idUser = await FirebaseAuth.instance.currentUser;
+    if (idUser != null) {
+      final userData = await userServices.getUser(idUser.uid);
       if (mounted) {
-        if (userData != null) {
-          setState(() {
-            _email = userData.email;
-            _name = userData.name;
-            _profileImage =
-                'https://wallpapers.com/images/hd/cool-profile-picture-ld8f4n1qemczkrig.jpg';
-          });
-        }
+        setState(() {
+          _email = userData?.email;
+          _name = userData?.name;
+          _userId = userData?.id;
+          _profileImage = userData?.image;
+        });
       }
     }
   }
 
   @override
   void initState() {
-    _getUser();
     super.initState();
+    _getUser(); // Fetch user data only once when the widget is first created
   }
 
   @override
@@ -62,11 +65,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 onTap: () {
                   showDialogImageProfile(_profileImage ?? '');
                 },
-                child: CircleAvatar(
-                  radius: 60,
-                  backgroundImage: NetworkImage(
-                    _profileImage ??
-                        'https://wallpapers.com/images/hd/cool-profile-picture-ld8f4n1qemczkrig.jpg', // Replace with actual image URL
+                child: Container(
+                  width: MediaQuery.of(context).size.width * 0.35,
+                  height: MediaQuery.of(context).size.height * 0.15,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(100),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(100),
+                    child: _profileImage == ""
+                        ? const Icon(Icons.account_circle, size: 60)
+                        : Image.memory(
+                            base64Decode(_profileImage ?? ''),
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return const Center(
+                                child: Icon(Icons.account_circle, size: 60),
+                              );
+                            },
+                          ),
                   ),
                 ),
               ),
@@ -88,23 +106,57 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-
-              // Divider
-              const Divider(),
-
-              // List of Profile Options
               ListTile(
                 leading: const Icon(Icons.person),
                 title: const Text('Account'),
-                onTap: () {
-                  // Navigate to Account Screen
+                onTap: () async {
+                  // Tunggu hasil dari EditProfileScreen dan perbarui data profil
+                  final updatedData = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => EditProfileScreen(
+                        id: _userId ?? "",
+                        user: _name ?? "",
+                        email: _email ?? "",
+                        image: _profileImage ?? '',
+                      ),
+                    ),
+                  );
+
+                  // Cek jika data diperbarui dan lakukan pembaruan status
+                  if (updatedData != null) {
+                    setState(() {
+                      _name = updatedData['name'];
+                      _email = updatedData['email'];
+                      _profileImage = updatedData['image'];
+                    });
+                    // Memperbarui data terbaru dari Firebase setelah perubahan
+                    await _getUser();
+                  }
                 },
               ),
+
               ListTile(
                 leading: const Icon(Icons.settings),
                 title: const Text('Settings'),
                 onTap: () {
-                  // Navigate to Settings Screen
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: Text('Coming Soon!'),
+                        content: Text('This feature is coming soon!'),
+                        actions: <Widget>[
+                          TextButton(
+                            child: Text('Close'),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                        ],
+                      );
+                    },
+                  );
                 },
               ),
               ListTile(
@@ -112,13 +164,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 title: const Text('Help & Support'),
                 onTap: () {
                   // Navigate to Help & Support Screen
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const HelpSupportScreen(),
+                    ),
+                  );
                 },
               ),
               ListTile(
                 leading: const Icon(Icons.logout),
                 title: const Text('Logout'),
                 onTap: () {
-                  // Implement logout functionality
                   _showLogoutDialog();
                 },
               ),
@@ -167,21 +224,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: Image.network(
-                  imageUrl,
-                  width: 250,
-                  height: 250,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return const Icon(Icons.error,
-                        size: 100, color: Colors.red);
-                  },
-                  loadingBuilder: (context, child, loadingProgress) {
-                    if (loadingProgress == null) return child;
-                    return const CircularProgressIndicator();
-                  },
+              Container(
+                width: MediaQuery.of(context).size.width * 0.35,
+                height: MediaQuery.of(context).size.height * 0.15,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(100),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(100),
+                  child: imageUrl == ""
+                      ? const Icon(Icons.account_circle, size: 60)
+                      : Image.memory(
+                          base64Decode(imageUrl ?? ''),
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return const Center(
+                              child: Icon(Icons.error, color: Colors.red),
+                            );
+                          },
+                        ),
                 ),
               ),
               const SizedBox(height: 16),

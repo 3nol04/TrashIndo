@@ -40,6 +40,18 @@ class _LoginScreensState extends State<LoginScreens> {
     });
   }
 
+ String _getAuthErrorMessage(String code) { 
+    switch (code) { 
+      case 'weak-password': 
+        return 'The password provided is too weak.'; 
+      case 'email-already-in-use': 
+        return 'The account already exists for that email.'; 
+      case 'invalid-email': 
+        return 'The email address is not valid.'; 
+      default: 
+        return 'An error occurred. Please try again.'; 
+    } 
+  }
   Future<void> _sendLoginRequest() async {
     await _validateEmail();
     if (_errorMessage.isNotEmpty) {
@@ -52,8 +64,10 @@ class _LoginScreensState extends State<LoginScreens> {
     )
         .then((value) async {
       if (mounted) {
-        await Navigator.pushReplacement(
-            context, MaterialPageRoute(builder: (context) => const Home()));
+        await Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => const Home()),
+            (route) => false);
       }
     }).catchError((error) {
       setState(() {

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart' as geo;
@@ -84,6 +86,8 @@ class _HomeScreensState extends State<HomeScreens> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
+                  // Make sure to import this for base64Decode
+
                   Container(
                     alignment: Alignment.center,
                     height: 50,
@@ -97,10 +101,14 @@ class _HomeScreensState extends State<HomeScreens> {
                       ),
                     ),
                     child: _imageProfile.isNotEmpty
-                        ? Image.asset(
-                            _imageProfile,
-                            width: 30,
-                            height: 30,
+                        ? ClipOval(
+                            // Clip the image to make it circular
+                            child: Image.memory(
+                              base64Decode(_imageProfile),
+                              width: 40,
+                              height: 40,
+                              fit: BoxFit.cover,
+                            ),
                           )
                         : const Icon(
                             Icons.person,
@@ -108,6 +116,7 @@ class _HomeScreensState extends State<HomeScreens> {
                             color: Colors.black,
                           ),
                   ),
+
                   const SizedBox(width: 10),
                   Expanded(
                     child: Column(
@@ -135,7 +144,6 @@ class _HomeScreensState extends State<HomeScreens> {
                 ],
               ),
               const SizedBox(height: 10),
-
               // Bagian scrollable
               Expanded(
                 child: SingleChildScrollView(
@@ -201,7 +209,6 @@ class _HomeScreensState extends State<HomeScreens> {
                           ),
                         ),
                       ),
-
                       // Carousel
                       Padding(
                         padding: const EdgeInsets.only(top: 20),

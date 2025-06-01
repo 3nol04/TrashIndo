@@ -1,11 +1,11 @@
 import 'dart:convert';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart' as geo;
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' as mp;
+import 'package:trashindo/main.dart';
 import 'package:trashindo/model/Sampah.dart';
 import 'package:trashindo/screens/home_screen.dart';
 import 'package:trashindo/services/sampahServices.dart';
@@ -58,7 +58,6 @@ class _DetailScreenstState extends State<DetailScreens> {
     });
   }
 
-  Future<void> _getSampah() async {}
   Future<void> _setScreen() async {
     try {
       final currentUser = FirebaseAuth.instance.currentUser;
@@ -194,7 +193,6 @@ class _DetailScreenstState extends State<DetailScreens> {
 
   Future<void> _sendComment() async {
     final comment = _commentController.text.trim();
-
     if (comment.isNotEmpty) {
       try {
         await FirebaseFirestore.instance
@@ -312,7 +310,7 @@ class _DetailScreenstState extends State<DetailScreens> {
                                 onPressed: () {
                                   Navigator.push(context,
                                       MaterialPageRoute(builder: (context) {
-                                    return const HomeScreens();
+                                    return const Home();
                                   }));
                                 },
                                 icon: Icon(Icons.arrow_back)),
@@ -398,10 +396,8 @@ class _DetailScreenstState extends State<DetailScreens> {
                         return Center(
                             child: Text('Data sampah tidak ditemukan'));
                       }
-
                       // When data is successfully fetched
                       _sampah = snapshot.data;
-
                       return Positioned(
                         left: sizeWidth * 0.84,
                         bottom: sizeHeight * 0.2,
