@@ -40,40 +40,53 @@ class _LoginScreensState extends State<LoginScreens> {
     });
   }
 
- String _getAuthErrorMessage(String code) { 
-    switch (code) { 
-      case 'weak-password': 
-        return 'The password provided is too weak.'; 
-      case 'email-already-in-use': 
-        return 'The account already exists for that email.'; 
-      case 'invalid-email': 
-        return 'The email address is not valid.'; 
-      default: 
-        return 'An error occurred. Please try again.'; 
-    } 
+  String _getAuthErrorMessage(String code) {
+    switch (code) {
+      case 'weak-password':
+        return 'The password provided is too weak.';
+      case 'email-already-in-use':
+        return 'The account already exists for that email.';
+      case 'invalid-email':
+        return 'The email address is not valid.';
+      case 'user-not-found':
+        return 'No user found with this email.';
+      case 'wrong-password':
+        return 'Incorrect password entered.';
+      default:
+        return 'An error occurred. Please try again.';
+    }
   }
+
   Future<void> _sendLoginRequest() async {
     await _validateEmail();
     if (_errorMessage.isNotEmpty) {
-      return;
+      return; // Exit if there are validation errors
     }
-    await FirebaseAuth.instance
-        .signInWithEmailAndPassword(
-      email: _emailController.text.trim(),
-      password: _passwordController.text.trim(),
-    )
-        .then((value) async {
+
+    try {
+      // Attempt to sign in with Firebase
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+
+      // If successful, navigate to Home screen
       if (mounted) {
         await Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (context) => const Home()),
             (route) => false);
       }
-    }).catchError((error) {
+    } catch (e) {
+      // Handle Firebase errors
       setState(() {
-        _errorMessage = error.toString();
+        if (e is FirebaseAuthException) {
+          _errorMessage = _getAuthErrorMessage(e.code);
+        } else {
+          _errorMessage = 'An unknown error occurred. Please try again.';
+        }
       });
-    });
+    }
   }
 
   @override

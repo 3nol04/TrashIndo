@@ -77,33 +77,59 @@ class _SingupscreensState extends State<Singupscreens> {
     }
   }
 
+  String _getAuthErrorMessage(String code) {
+    switch (code) {
+      case 'weak-password':
+        return 'The password provided is too weak.';
+      case 'email-already-in-use':
+        return 'The account already exists for that email.';
+      case 'invalid-email':
+        return 'The email address is not valid.';
+      default:
+        return 'An error occurred. Please try again.';
+    }
+  }
+
   Future<void> _signUpRequest() async {
     await _validateEmail();
     if (_errorMessageEmail.isNotEmpty || _errorMessagePassword.isNotEmpty) {
       return;
     }
-    final idUser = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+
+    try {
+      // Sign up with Firebase authentication
+      final idUser = await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: _emailController.text.trim(),
-        password: _passwordController.text);
-    await FirebaseFirestore.instance
-        .collection('users')
-        .doc(idUser.user!.uid)
-        .set({
-      'name': 'guest', // default name for new user
-      'image' : '',
-      'email': _emailController.text.trim(),
-      'password': _passwordController.text.trim(),
-      //role : user
-      'createdAt': Timestamp.now(),
-      
-    }).then((value) async {
-      await Navigator.pushReplacement(context,
-          MaterialPageRoute(builder: (context) => const LoginScreens()));
-    });
+        password: _passwordController.text,
+      );
+
+      // Save user data to Firestore
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(idUser.user!.uid)
+          .set({
+        'name': 'guest', // Default name for new user
+        'image': '',
+        'email': _emailController.text.trim(),
+        'password': _passwordController.text.trim(),
+        'createdAt': Timestamp.now(),
+      }).then((value) async {
+        // Navigate to login screen after successful sign-up
+        await Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginScreens()),
+        );
+      });
+    } catch (e) {
+      // Handle Firebase error
+      String errorMessage = _getAuthErrorMessage(e.toString());
+      setState(() {
+        _errorMessageEmail = errorMessage;
+      });
+    }
   }
 
   @override
-
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
