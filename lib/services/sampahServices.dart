@@ -14,6 +14,7 @@ class SampahServices {
         await FirebaseFirestore.instance.collection('sampah').doc(id).get();
     return Sampah.fromJson(data);
   }
+  
 
   Future <void> deleteSampah(String id) async {
     await FirebaseFirestore.instance.collection('sampah').doc(id).delete();

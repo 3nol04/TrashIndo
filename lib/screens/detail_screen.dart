@@ -7,10 +7,12 @@ import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart' as geo;
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' as mp;
 import 'package:trashindo/model/Sampah.dart';
+import 'package:trashindo/screens/edit_sampah_screen.dart';
 import 'package:trashindo/screens/home_screen.dart';
 import 'package:trashindo/services/sampahServices.dart';
 import 'package:trashindo/services/userServices.dart';
 import 'package:trashindo/wigedts/fonts_wigedts.dart';
+
 
 class DetailScreens extends StatefulWidget {
   DetailScreens({
@@ -369,13 +371,17 @@ class _DetailScreenstState extends State<DetailScreens> {
                               ),
                               child: Center(
                                 child: IconButton(
-                                    onPressed: () {
-                                      //TODO EDIT SAMPAH
-                                    },
-                                    icon: Icon(
-                                      Icons.edit_note_rounded,
-                                      size: 29,
-                                    )),
+                                  onPressed: () async {
+                                    await Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => EditSampahScreen(sampah: _sampah!),
+                                      ),
+                                    );
+                                    await _setScreen(); 
+                                  },
+                                  icon: Icon(Icons.edit_note_rounded, size: 29),
+                                ),
                               )),
                         ),
                       ],
