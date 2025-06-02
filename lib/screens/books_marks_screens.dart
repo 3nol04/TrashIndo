@@ -52,7 +52,6 @@ class _BooksMarksScreensState extends State<BooksMarksScreens> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Bookmarks'),
-        backgroundColor: Colors.green[700],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())

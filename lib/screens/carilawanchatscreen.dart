@@ -99,7 +99,7 @@ class _SearchScreenState extends State<SearchScreen> {
     }
   }
 
-  // Menampilkan daftar pengguna yang pernah berkomunikasi
+
   Future<List<Map<String, dynamic>>> _getRecentChats() async {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser != null) {

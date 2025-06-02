@@ -20,7 +20,7 @@ class _ChatScreenState extends State<ChatScreen> {
   void initState() {
     super.initState();
 
-    // Menangkap notifikasi yang diterima saat aplikasi di foreground
+    // Initialize FirebaseMessaging
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       if (message.notification != null) {
         print('Notification received: ${message.notification!.title}');
@@ -29,31 +29,36 @@ class _ChatScreenState extends State<ChatScreen> {
       }
     });
 
-    // Menangkap notifikasi saat aplikasi di background atau terminated
+    // Handle notification when the app is opened from a background state
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      // Menangani ketika user mengetuk notifikasi dan aplikasi dibuka
       print('Notification clicked!');
       print('Message: ${message.notification!.body}');
       _showNewMessageDialog(message.notification!.title, message.notification!.body);
     });
 
-    // Menangkap notifikasi saat aplikasi di background
+    // Handle background notifications
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+    // Get the FCM token for the current device
+    FirebaseMessaging.instance.getToken().then((token) {
+      print("FCM Token: $token");
+    });
   }
 
-  // Fungsi untuk menangani notifikasi saat aplikasi di background
+  // Function to handle notifications when the app is in the background
   Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     print('Handling a background message: ${message.notification?.title}');
     print('Message: ${message.notification?.body}');
   }
 
+  // Function to send the message to Firestore and trigger notification
   Future<void> _sendMessage() async {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser != null) {
       final userId = currentUser.uid;
       final roomId = widget.roomId;
 
-      // Menyimpan pesan ke dalam sub-koleksi 'messages' di dalam room tertentu
+      // Save message to Firestore
       await FirebaseFirestore.instance
           .collection('chat_rooms')
           .doc(roomId)
@@ -64,24 +69,24 @@ class _ChatScreenState extends State<ChatScreen> {
         'timestamp': FieldValue.serverTimestamp(),
       });
 
-      // Ambil token penerima (misalnya, dari Firestore)
+      // Get the receiver's token (e.g., from Firestore)
       String receiverToken = await _getReceiverToken(roomId);
 
-      // Mengirim notifikasi ke penerima melalui backend
+      // Send notification if token is valid
       if (receiverToken.isNotEmpty) {
         await sendNotificationToReceiver(roomId, _controller.text, receiverToken);
       }
 
-      // Clear input field setelah mengirim pesan
+      // Clear input field after sending message
       _controller.clear();
     }
   }
 
-  // Fungsi untuk mengirim notifikasi ke backend
+  // Function to send notification to the receiver using backend
   Future<void> sendNotificationToReceiver(String roomId, String message, String receiverToken) async {
     try {
       final response = await http.post(
-        Uri.parse('https://vercel.com/m-tri-setiantos-projects/cloud-notiv-9dr8/send-notification'),
+        Uri.parse('https://cloud-notiv-c6tg.vercel.app/send-notification'),
         body: {
           'token': receiverToken,
           'title': 'New message',
@@ -99,7 +104,7 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  // Fungsi untuk mendapatkan token penerima dari Firestore
+  // Function to get receiver token from Firestore
   Future<String> _getReceiverToken(String roomId) async {
     try {
       final doc = await FirebaseFirestore.instance
@@ -107,10 +112,10 @@ class _ChatScreenState extends State<ChatScreen> {
           .doc(roomId)
           .get();
       if (doc.exists) {
-        // Ganti dengan field yang sesuai di Firestore
+        // Replace with the correct field in your Firestore document
         return doc.data()?['receiverToken'] ?? ''; 
       } else {
-        return ''; // Token tidak ditemukan
+        return ''; // Token not found
       }
     } catch (error) {
       print('Error fetching receiver token: $error');
@@ -118,7 +123,7 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  // Fungsi untuk menampilkan dialog ketika menerima notifikasi baru
+  // Show dialog when a new message notification is received
   void _showNewMessageDialog(String? title, String? body) {
     showDialog(
       context: context,
