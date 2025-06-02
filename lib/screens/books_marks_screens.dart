@@ -62,7 +62,6 @@ class _BooksMarksScreensState extends State<BooksMarksScreens> {
                   itemCount: _dataBookmarks.length,
                   itemBuilder: (context, index) {
                     final _bookNark = _dataBookmarks[index];
-
                     return ListKotakSampahWegendsts(
                       id: _bookNark.sampahId ?? '',
                       status: _bookNark.status ?? '',

@@ -121,7 +121,7 @@ class _HomeState extends State<Home> {
         buttonBackgroundColor: const Color(0xFF2C7C7D),
         color: const Color(0xFF2C7C7D),
         animationCurve: Curves.fastEaseInToSlowEaseOut,
-        height: 45,
+        height: MediaQuery.of(context).size.height * 0.05,
         animationDuration: const Duration(milliseconds: 800),
         items: const <Widget>[
           Icon(Icons.home, size: 30, color: Colors.white),
