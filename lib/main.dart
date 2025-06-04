@@ -14,6 +14,8 @@ import 'package:trashindo/screens/profile_screens.dart';
 import 'package:trashindo/screens/search_screens.dart';
 import 'package:trashindo/screens/splash_screen.dart';
 import 'package:trashindo/screens/upload_screens.dart';
+import 'package:provider/provider.dart';
+import 'package:trashindo/providers/theme_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,20 +24,30 @@ Future<void> main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  runApp(const MainApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => ThemeProvider(),
+      child: const MainApp(),
+    ),
+  );
 }
+
 
 class MainApp extends StatelessWidget {
   const MainApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: MainScreen(),
+      theme: themeProvider.themeData,
+      home: const MainScreen(),
     );
   }
 }
+
+
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});

@@ -6,6 +6,8 @@ import 'package:trashindo/screens/helpandsupport.dart';
 import 'package:trashindo/screens/log_in_screen.dart';
 import 'package:trashindo/screens/edit_profile.dart';
 import 'package:trashindo/services/userServices.dart';
+import 'package:provider/provider.dart';
+import 'package:trashindo/providers/theme_provider.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -51,10 +53,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Profile'),
-        centerTitle: true,
-      ),
+    appBar: AppBar(
+      title: const Text('Profile'),
+      centerTitle: true,
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.brightness_6),
+          onPressed: () {
+            Provider.of<ThemeProvider>(context, listen: false).toggleTheme();
+          },
+        )
+      ],
+    ),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),

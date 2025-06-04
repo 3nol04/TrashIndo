@@ -14,11 +14,12 @@ import 'package:trashindo/services/userServices.dart';
 import 'package:trashindo/wigedts/card_category_wegidts.dart';
 import 'package:trashindo/wigedts/corosel_homepage_wigents.dart';
 import 'package:trashindo/wigedts/list_kotak_sampah_wegendsts.dart';
+import 'package:provider/provider.dart';
+import 'package:trashindo/providers/theme_provider.dart';
+
 
 class HomeScreens extends StatefulWidget {
-  const HomeScreens({
-    super.key,
-  });
+  const HomeScreens({super.key});
 
   @override
   State<HomeScreens> createState() => _HomeScreensState();
@@ -35,100 +36,51 @@ class _HomeScreensState extends State<HomeScreens> {
     super.initState();
     _requestLocation();
     _getUser();
-    getTokenFCM(); // Mendapatkan token FCM
+    getTokenFCM();
   }
 
   Future<void> _getUser() async {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser != null) {
       final userData = await user?.getUser(currentUser.uid);
-
-      if (mounted) {
-        if (userData != null) {
-          setState(() {
-            _name = userData.name;
-            _imageProfile = userData.image; // uncomment if image exists
-          });
-        }
+      if (mounted && userData != null) {
+        setState(() {
+          _name = userData.name;
+          _imageProfile = userData.image;
+        });
       }
     }
   }
 
   Future<void> _requestLocation() async {
     bool servicesEnabled = await geo.Geolocator.isLocationServiceEnabled();
-    if (!servicesEnabled) return Future.error('Lokasi tidak diaktifkan.');
+    if (!servicesEnabled) return;
     geo.LocationPermission permission = await geo.Geolocator.checkPermission();
     if (permission == geo.LocationPermission.denied) {
       permission = await geo.Geolocator.requestPermission();
-      if (permission == geo.LocationPermission.denied) {
-        return Future.error('Izin lokasi ditolak.');
+      if (permission == geo.LocationPermission.denied || permission == geo.LocationPermission.deniedForever) {
+        return;
       }
-    }
-    if (permission == geo.LocationPermission.deniedForever) {
-      return Future.error('Izin lokasi permanen ditolak.');
     }
   }
 
   Future<void> getTokenFCM() async {
     try {
-      // Mendapatkan instance SharedPreferences
       final prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('tokenFCM'); // Cek token yang sudah ada
-
-      // Mendapatkan instance FirebaseMessaging untuk mengelola notifikasi
+      String? token = prefs.getString('tokenFCM');
       FirebaseMessaging newToken = FirebaseMessaging.instance;
-
-      // Meminta izin notifikasi dari pengguna
-      NotificationSettings permission = await newToken.requestPermission(
-        alert: true,
-        badge: true,
-        sound: true,
-      );
-
-      // Menangani izin notifikasi
-      if (permission.authorizationStatus == AuthorizationStatus.authorized) {
-        print('User diberikan izin untuk menerima notifikasi');
-      } else if (permission.authorizationStatus ==
-          AuthorizationStatus.provisional) {
-        print('Pengguna diberikan izin sementara untuk menerima notifikasi');
-      } else {
-        print(
-            'Pengguna menolak atau belum menerima izin untuk menerima notifikasi');
+      NotificationSettings permission = await newToken.requestPermission();
+      if (token == null) {
+        token = await newToken.getToken();
+        prefs.setString('tokenFCM', token!);
       }
       final currentUser = FirebaseAuth.instance.currentUser;
-
       if (currentUser != null) {
-        final userData = await user?.getUser(currentUser.uid);
-
-        if (userData != null) {
-          await FirebaseFirestore.instance
-              .collection('users')
-              .doc(currentUser.uid)
-              .update({'tokenFCM': token});
-        } else {
-          print("Tidak ada data pengguna yang ditemukan.");
-        }
-
-        if (token == null) {
-          token = await newToken.getToken();
-          prefs.setString('tokenFCM', token!);
-          // Cetak token dan email
-          print("Token FCM : $token ");
-        } else {
-          print("Tidak ada pengguna yang terautentikasi.");
-        }
-      } else {
-        print("Tidak ada pengguna yang terautentikasi.");
+        await FirebaseFirestore.instance.collection('users').doc(currentUser.uid).update({'tokenFCM': token});
       }
     } catch (e) {
-      // Tangani error jika terjadi masalah
-      print("Terjadi kesalahan: $e");
+      print("FCM error: $e");
     }
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
   }
 
   @override
@@ -141,18 +93,15 @@ class _HomeScreensState extends State<HomeScreens> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   Container(
-                    alignment: Alignment.center,
                     height: 50,
                     width: 50,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.white,
+                      color: Theme.of(context).cardColor,
                       border: Border.all(
-                        color: Colors.black,
+                        color: Theme.of(context).dividerColor,
                         width: 2,
                       ),
                     ),
@@ -165,65 +114,46 @@ class _HomeScreensState extends State<HomeScreens> {
                               fit: BoxFit.cover,
                             ),
                           )
-                        : const Icon(
-                            Icons.person,
-                            size: 30,
-                            color: Colors.black,
-                          ),
+                        : Icon(Icons.person, color: Theme.of(context).iconTheme.color),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'Welcome',
-                          style: GoogleFonts.poppins(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w400,
-                            color: Colors.black,
-                          ),
-                        ),
-                        Text(
-                          _name.isEmpty ? 'Guest' : _name,
-                          style: GoogleFonts.poppins(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w300,
-                            color: Colors.black,
-                          ),
-                        ),
+                        Text('Welcome',
+                            style: GoogleFonts.poppins(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w400,
+                              color: Theme.of(context).textTheme.bodyLarge?.color,
+                            )),
+                        Text(_name.isEmpty ? 'Guest' : _name,
+                            style: GoogleFonts.poppins(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w300,
+                              color: Theme.of(context).textTheme.bodyLarge?.color,
+                            )),
                       ],
                     ),
                   ),
                   GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const SearchScreen(),
-                        ),
-                      );
-                    },
+                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SearchScreen())),
                     child: Container(
                       height: MediaQuery.of(context).size.height * 0.06,
                       width: MediaQuery.of(context).size.width * 0.16,
                       decoration: BoxDecoration(
+                        color: Theme.of(context).cardColor,
+                        borderRadius: BorderRadius.circular(15),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
+                            color: Theme.of(context).shadowColor.withOpacity(0.2),
                             blurRadius: 5,
                             offset: const Offset(0, 3),
                           ),
                         ],
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(15),
                       ),
                       child: Center(
-                        child: Icon(
-                          Icons.message_outlined,
-                          color: Colors.black,
-                          size: 20,
-                        ),
+                        child: Icon(Icons.message_outlined, color: Theme.of(context).iconTheme.color, size: 20),
                       ),
                     ),
                   ),
@@ -245,48 +175,18 @@ class _HomeScreensState extends State<HomeScreens> {
                                   builder: (context) => const SearchScreens()),
                             );
                           },
-                          child: Container(
-                            height: MediaQuery.of(context).size.height * 0.06,
-                            decoration: BoxDecoration(
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.2),
-                                  blurRadius: 5,
-                                  offset: const Offset(0, 3),
+                           child: IgnorePointer(
+                            child: TextField(
+                              decoration: InputDecoration(
+                                hintText: 'Search',
+                                hintStyle: TextStyle(color: Theme.of(context).hintColor),
+                                prefixIcon: Padding(
+                                  padding: const EdgeInsets.only(left: 15, right: 10),
+                                  child: Icon(Icons.search, color: Theme.of(context).iconTheme.color),
                                 ),
-                              ],
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(15),
-                            ),
-                            child: IgnorePointer(
-                              child: TextField(
-                                decoration: InputDecoration(
-                                  hintText: 'Search',
-                                  hintStyle: const TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w400,
-                                    color: Colors.black,
-                                  ),
-                                  prefixIcon: const Padding(
-                                    padding:
-                                        EdgeInsets.only(left: 15, right: 10),
-                                    child: Icon(
-                                      Icons.search,
-                                      color: Colors.black,
-                                      size: 20,
-                                    ),
-                                  ),
-                                  prefixIconConstraints: const BoxConstraints(
-                                    minHeight: 20,
-                                    minWidth: 20,
-                                  ),
-                                  border: InputBorder.none,
-                                  isCollapsed: true,
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    vertical: 16,
-                                    horizontal: 0,
-                                  ),
-                                ),
+                                border: InputBorder.none,
+                                isCollapsed: true,
+                                contentPadding: const EdgeInsets.symmetric(vertical: 16),
                               ),
                             ),
                           ),
@@ -317,7 +217,7 @@ class _HomeScreensState extends State<HomeScreens> {
                             style: GoogleFonts.poppins(
                               fontSize: 20,
                               fontWeight: FontWeight.w500,
-                              color: Colors.black,
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
                             )),
                       ),
                       Padding(
@@ -355,7 +255,7 @@ class _HomeScreensState extends State<HomeScreens> {
                             style: GoogleFonts.poppins(
                               fontSize: 20,
                               fontWeight: FontWeight.w500,
-                              color: Colors.black,
+                              color: Theme.of(context).textTheme.bodyLarge?.color,
                             ),
                           ),
                         ),

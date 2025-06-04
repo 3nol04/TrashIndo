@@ -276,7 +276,7 @@ class _UploadScreensState extends State<UploadScreens> {
                       child: Icon(
                         Icons.arrow_back_outlined,
                         size: 30,
-                        color: Colors.black,
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
                       ),
                     ),
                     Container(
@@ -288,7 +288,7 @@ class _UploadScreensState extends State<UploadScreens> {
                         style: GoogleFonts.roboto(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          color: Colors.black,
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
                         ),
                       ),
                     ),
@@ -381,7 +381,7 @@ class _UploadScreensState extends State<UploadScreens> {
                                 style: GoogleFonts.poppins(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w500,
-                                  color: Colors.black.withOpacity(0.5),
+                                   color: Theme.of(context).textTheme.bodyLarge?.color,
                                 )),
                           ),
                           const SizedBox(height: 5),
@@ -448,7 +448,7 @@ class _UploadScreensState extends State<UploadScreens> {
                                 style: GoogleFonts.poppins(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w500,
-                                  color: Colors.black.withOpacity(0.5),
+                                   color: Theme.of(context).textTheme.bodyLarge?.color,
                                 )),
                           ),
                           const SizedBox(height: 5),
@@ -503,7 +503,7 @@ class _UploadScreensState extends State<UploadScreens> {
                       style: GoogleFonts.poppins(
                         fontSize: 15,
                         fontWeight: FontWeight.w500,
-                        color: Colors.black.withOpacity(0.5),
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
                       )),
                 ),
                 const SizedBox(height: 5),
@@ -556,7 +556,7 @@ class _UploadScreensState extends State<UploadScreens> {
                     style: GoogleFonts.poppins(
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
-                      color: Colors.black.withOpacity(0.5),
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
                     ),
                   ),
                 ),
@@ -598,7 +598,7 @@ class _UploadScreensState extends State<UploadScreens> {
                     style: GoogleFonts.poppins(
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
-                      color: Colors.black.withOpacity(0.5),
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
                     ),
                   ),
                 ),
