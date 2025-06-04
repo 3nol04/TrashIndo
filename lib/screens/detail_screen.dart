@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart' as geo;
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' as mp;
+import 'package:trashindo/main.dart';
 import 'package:trashindo/model/Sampah.dart';
 import 'package:trashindo/screens/edit_sampah_screen.dart';
 import 'package:trashindo/screens/home_screen.dart';
@@ -326,7 +327,7 @@ class _DetailScreenstState extends State<DetailScreens> {
                                 onPressed: () {
                                   Navigator.push(context,
                                       MaterialPageRoute(builder: (context) {
-                                    return const HomeScreens();
+                                    return const Home();
                                   }));
                                 },
                                 icon: Icon(Icons.arrow_back)),

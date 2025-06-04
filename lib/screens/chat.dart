@@ -3,9 +3,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class ChatScreen extends StatefulWidget {
-  final String roomId;  // ID Room Chat
+  final String roomId;
 
   const ChatScreen({super.key, required this.roomId});
 
@@ -15,52 +16,90 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _controller = TextEditingController();
+  late FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
 
   @override
   void initState() {
     super.initState();
+    _initializeFirebaseMessaging();
+    _initializeLocalNotifications();
+  }
 
-    // Initialize FirebaseMessaging
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      if (message.notification != null) {
-        print('Notification received: ${message.notification!.title}');
-        print('Message: ${message.notification!.body}');
-        _showNewMessageDialog(message.notification!.title, message.notification!.body);
+  // Initialize Local Notifications
+  void _initializeLocalNotifications() {
+    flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+    final AndroidInitializationSettings initializationSettingsAndroid =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+    final InitializationSettings initializationSettings = InitializationSettings(
+      android: initializationSettingsAndroid,
+    );
+    flutterLocalNotificationsPlugin.initialize(initializationSettings);
+  }
+
+  // Optimized Firebase Messaging Initialization
+  void _initializeFirebaseMessaging() {
+    FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
+    FirebaseMessaging.onMessageOpenedApp.listen(_handleOpenedMessage);
+    FirebaseMessaging.instance.getToken().then((token) {
+      if (token != null) {
+        print("FCM Token: $token");
       }
     });
+  }
 
-    // Handle notification when the app is opened from a background state
-    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+  // Handle foreground messages
+  void _handleForegroundMessage(RemoteMessage message) {
+    if (message.notification != null) {
+      print('Notification received: ${message.notification?.title}');
+      print('Message: ${message.notification?.body}');
+      _showNewMessagePopup(message.notification?.title, message.notification?.body);
+    } else {
+      print('Received message without notification');
+    }
+  }
+
+  // Handle message when app is opened from background
+  void _handleOpenedMessage(RemoteMessage message) {
+    if (message.notification != null) {
       print('Notification clicked!');
-      print('Message: ${message.notification!.body}');
-      _showNewMessageDialog(message.notification!.title, message.notification!.body);
-    });
-
-    // Handle background notifications
-    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-
-    // Get the FCM token for the current device
-    FirebaseMessaging.instance.getToken().then((token) {
-      print("FCM Token: $token");
-    });
+      print('Message: ${message.notification?.body}');
+      _showNewMessagePopup(message.notification?.title, message.notification?.body);
+    } else {
+      print('Opened message without notification');
+    }
   }
 
-  // Function to handle notifications when the app is in the background
-  Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-    print('Handling a background message: ${message.notification?.title}');
-    print('Message: ${message.notification?.body}');
+  // Show popup notification
+  Future<void> _showNewMessagePopup(String? title, String? body) async {
+    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+      'message_channel', 
+      'Messages',
+      channelDescription: 'Notifications for new messages',
+      importance: Importance.max,
+      priority: Priority.high,
+    );
+
+    const NotificationDetails platformDetails = NotificationDetails(
+      android: androidDetails,
+    );
+
+    await flutterLocalNotificationsPlugin.show(
+      0,
+      title ?? 'New Message',
+      body ?? 'You have received a new message.',
+      platformDetails,
+      payload: 'message_payload',
+    );
   }
 
-  // Function to send the message to Firestore and trigger notification
+  // Send message to Firestore
   Future<void> _sendMessage() async {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser != null) {
       final userId = currentUser.uid;
       final roomId = widget.roomId;
 
-      // Save message to Firestore
-      await FirebaseFirestore.instance
-          .collection('chat_rooms')
+      await FirebaseFirestore.instance.collection('chat_rooms')
           .doc(roomId)
           .collection('messages')
           .add({
@@ -69,24 +108,19 @@ class _ChatScreenState extends State<ChatScreen> {
         'timestamp': FieldValue.serverTimestamp(),
       });
 
-      // Get the receiver's token (e.g., from Firestore)
       String receiverToken = await _getReceiverToken(roomId);
-
-      // Send notification if token is valid
       if (receiverToken.isNotEmpty) {
-        await sendNotificationToReceiver(roomId, _controller.text, receiverToken);
+        await _sendNotificationToReceiver(roomId, _controller.text, receiverToken);
       }
-
-      // Clear input field after sending message
       _controller.clear();
     }
   }
 
-  // Function to send notification to the receiver using backend
-  Future<void> sendNotificationToReceiver(String roomId, String message, String receiverToken) async {
+  // Send notification to the receiver
+  Future<void> _sendNotificationToReceiver(String roomId, String message, String receiverToken) async {
     try {
       final response = await http.post(
-        Uri.parse('https://cloud-notiv-c6tg.vercel.app/send-notification'),
+        Uri.parse('https://notif-six.vercel.app/send-notification'),
         body: {
           'token': receiverToken,
           'title': 'New message',
@@ -104,42 +138,29 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  // Function to get receiver token from Firestore
+  // Get receiver token from Firestore
   Future<String> _getReceiverToken(String roomId) async {
     try {
-      final doc = await FirebaseFirestore.instance
-          .collection('chat_rooms')
+      final doc = await FirebaseFirestore.instance.collection('chat_rooms')
           .doc(roomId)
           .get();
-      if (doc.exists) {
-        // Replace with the correct field in your Firestore document
-        return doc.data()?['receiverToken'] ?? ''; 
-      } else {
-        return ''; // Token not found
+      final currentUser = doc.data();
+      if (currentUser != null) {
+        List<String> userIds = List<String>.from(currentUser['userIds']);
+        print('User IDs in room: $userIds');
+        final user = await FirebaseFirestore.instance.collection('users')
+            .doc(userIds[0])  // Assuming the first user is the receiver
+            .get();
+        final receiverToken = user.data()?['tokenFCM'] as String?;
+        if (receiverToken != null && receiverToken.isNotEmpty) {
+          return receiverToken;
+        }
       }
+      return ''; // Token not found or document doesn't exist
     } catch (error) {
       print('Error fetching receiver token: $error');
-      return ''; // Return empty token if error
+      return ''; // Return empty token if error occurs
     }
-  }
-
-  // Show dialog when a new message notification is received
-  void _showNewMessageDialog(String? title, String? body) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(title ?? 'New Message'),
-        content: Text(body ?? 'You have received a new message.'),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () {
-              Navigator.of(ctx).pop();
-            },
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
   }
 
   @override
@@ -171,38 +192,52 @@ class _ChatScreenState extends State<ChatScreen> {
                   itemBuilder: (ctx, index) {
                     final chat = chatDocs[index];
                     final isCurrentUser = chat['senderId'] == FirebaseAuth.instance.currentUser!.uid;
-
                     return Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Align(
-                        alignment: isCurrentUser ? Alignment.centerRight : Alignment.centerLeft,
+                        alignment: isCurrentUser
+                            ? Alignment.centerRight
+                            : Alignment.centerLeft,
                         child: Column(
-                          crossAxisAlignment: isCurrentUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                          crossAxisAlignment: isCurrentUser
+                              ? CrossAxisAlignment.end
+                              : CrossAxisAlignment.start,
                           children: [
                             Container(
                               decoration: BoxDecoration(
-                                color: isCurrentUser ? Colors.blue[200] : Colors.grey[300],
+                                color: isCurrentUser
+                                    ? Colors.blue[200]
+                                    : Colors.grey[300],
                                 borderRadius: BorderRadius.circular(15),
                               ),
-                              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 10, horizontal: 15),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
                                     chat['message'],
                                     style: TextStyle(
-                                      color: isCurrentUser ? Colors.white : Colors.black,
+                                      color: isCurrentUser
+                                          ? Colors.white
+                                          : Colors.black,
                                       fontSize: 16,
                                     ),
                                   ),
                                   const SizedBox(height: 5),
                                   Text(
                                     chat['timestamp'] != null
-                                        ? (chat['timestamp'] as Timestamp).toDate().toLocal().toString().split(' ')[1]
+                                        ? (chat['timestamp'] as Timestamp)
+                                            .toDate()
+                                            .toLocal()
+                                            .toString()
+                                            .split(' ')[1]
                                         : '',
                                     style: TextStyle(
                                       fontSize: 12,
-                                      color: isCurrentUser ? Colors.white70 : Colors.black45,
+                                      color: isCurrentUser
+                                          ? Colors.white70
+                                          : Colors.black45,
                                     ),
                                   ),
                                 ],
