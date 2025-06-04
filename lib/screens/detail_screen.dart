@@ -418,10 +418,8 @@ class _DetailScreenstState extends State<DetailScreens> {
                         return Center(
                             child: Text('Data sampah tidak ditemukan'));
                       }
-
                       // When data is successfully fetched
                       _sampah = snapshot.data;
-
                       return Positioned(
                         left: sizeWidth * 0.84,
                         bottom: sizeHeight * 0.2,
@@ -631,9 +629,7 @@ class _DetailScreenstState extends State<DetailScreens> {
                                                     child: Text(
                                                         'Belum ada komentar'));
                                               }
-
                                               final comments = snapshot.data!;
-
                                               return ListView.builder(
                                                 padding:
                                                     const EdgeInsets.symmetric(
@@ -644,7 +640,6 @@ class _DetailScreenstState extends State<DetailScreens> {
                                                       comments[index];
                                                   final profile =
                                                       comment.userImage ?? "";
-
                                                   return Container(
                                                     margin: const EdgeInsets
                                                         .symmetric(
@@ -723,7 +718,6 @@ class _DetailScreenstState extends State<DetailScreens> {
                                             },
                                           ),
                                         ),
-
                                         // Panel input komentar
                                         if (_panelVisible)
                                           Padding(
