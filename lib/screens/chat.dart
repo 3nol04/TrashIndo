@@ -1,9 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:provider/provider.dart';
+import 'package:trashindo/providers/theme_provider.dart';
+
 
 class ChatScreen extends StatefulWidget {
   final String roomId;
@@ -15,160 +15,102 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  final TextEditingController _controller = TextEditingController();
-  late FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
+  final TextEditingController _messageController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+  final currentUser = FirebaseAuth.instance.currentUser;
+  
 
-  @override
-  void initState() {
-    super.initState();
-    _initializeFirebaseMessaging();
-    _initializeLocalNotifications();
+  void _sendMessage() async {
+    final message = _messageController.text.trim();
+    if (message.isEmpty) return;
+
+    await FirebaseFirestore.instance
+        .collection('chat_rooms')
+        .doc(widget.roomId)
+        .collection('messages')
+        .add({
+      'senderId': currentUser!.uid,
+      'text': message,
+      'timestamp': FieldValue.serverTimestamp(),
+    });
+
+    _messageController.clear();
+    _scrollToBottom();
   }
 
-  // Initialize Local Notifications
-  void _initializeLocalNotifications() {
-    flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-    final AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
-    final InitializationSettings initializationSettings = InitializationSettings(
-      android: initializationSettingsAndroid,
-    );
-    flutterLocalNotificationsPlugin.initialize(initializationSettings);
-  }
-
-  // Optimized Firebase Messaging Initialization
-  void _initializeFirebaseMessaging() {
-    FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
-    FirebaseMessaging.onMessageOpenedApp.listen(_handleOpenedMessage);
-    FirebaseMessaging.instance.getToken().then((token) {
-      if (token != null) {
-        print("FCM Token: $token");
-      }
+  void _scrollToBottom() {
+    Future.delayed(const Duration(milliseconds: 300)).then((_) {
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
     });
   }
 
-  // Handle foreground messages
-  void _handleForegroundMessage(RemoteMessage message) {
-    if (message.notification != null) {
-      print('Notification received: ${message.notification?.title}');
-      print('Message: ${message.notification?.body}');
-      _showNewMessagePopup(message.notification?.title, message.notification?.body);
-    } else {
-      print('Received message without notification');
-    }
-  }
+  Widget _buildMessage(DocumentSnapshot doc) {
+    
+    final data = doc.data() as Map<String, dynamic>;
+    final isMe = data['senderId'] == currentUser!.uid;
+    
 
-  // Handle message when app is opened from background
-  void _handleOpenedMessage(RemoteMessage message) {
-    if (message.notification != null) {
-      print('Notification clicked!');
-      print('Message: ${message.notification?.body}');
-      _showNewMessagePopup(message.notification?.title, message.notification?.body);
-    } else {
-      print('Opened message without notification');
-    }
-  }
+    return Container(
+      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      child: Column(
+        crossAxisAlignment:
+            isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            constraints: const BoxConstraints(maxWidth: 280),
+            decoration: BoxDecoration(
+              color: isMe ? Colors.blue[400] : Colors.grey[800],
+              borderRadius: BorderRadius.circular(18),
+            ),
+        child: Text(
+          data['text'] ?? '',
+          style: TextStyle(
+            color: isMe ? Colors.white : Theme.of(context).textTheme.bodyLarge?.color,
+          ),
+        ),
 
-  // Show popup notification
-  Future<void> _showNewMessagePopup(String? title, String? body) async {
-    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-      'message_channel', 
-      'Messages',
-      channelDescription: 'Notifications for new messages',
-      importance: Importance.max,
-      priority: Priority.high,
-    );
 
-    const NotificationDetails platformDetails = NotificationDetails(
-      android: androidDetails,
-    );
-
-    await flutterLocalNotificationsPlugin.show(
-      0,
-      title ?? 'New Message',
-      body ?? 'You have received a new message.',
-      platformDetails,
-      payload: 'message_payload',
+          ),
+          const SizedBox(height: 4),
+          Text(
+            _formatTimestamp(data['timestamp']),
+            style: TextStyle(fontSize: 10, color: Colors.grey[500]),
+          ),
+        ],
+      ),
     );
   }
 
-  // Send message to Firestore
-  Future<void> _sendMessage() async {
-    final currentUser = FirebaseAuth.instance.currentUser;
-    if (currentUser != null) {
-      final userId = currentUser.uid;
-      final roomId = widget.roomId;
-
-      await FirebaseFirestore.instance.collection('chat_rooms')
-          .doc(roomId)
-          .collection('messages')
-          .add({
-        'message': _controller.text,
-        'senderId': userId,
-        'timestamp': FieldValue.serverTimestamp(),
-      });
-
-      String receiverToken = await _getReceiverToken(roomId);
-      if (receiverToken.isNotEmpty) {
-        await _sendNotificationToReceiver(roomId, _controller.text, receiverToken);
-      }
-      _controller.clear();
-    }
-  }
-
-  // Send notification to the receiver
-  Future<void> _sendNotificationToReceiver(String roomId, String message, String receiverToken) async {
-    try {
-      final response = await http.post(
-        Uri.parse('https://notif-six.vercel.app/send-notification'),
-        body: {
-          'token': receiverToken,
-          'title': 'New message',
-          'body': message,
-          'roomId': roomId,
-        },
-      );
-      if (response.statusCode == 200) {
-        print('Notification sent');
-      } else {
-        print('Failed to send notification');
-      }
-    } catch (error) {
-      print('Error sending notification: $error');
-    }
-  }
-
-  // Get receiver token from Firestore
-  Future<String> _getReceiverToken(String roomId) async {
-    try {
-      final doc = await FirebaseFirestore.instance.collection('chat_rooms')
-          .doc(roomId)
-          .get();
-      final currentUser = doc.data();
-      if (currentUser != null) {
-        List<String> userIds = List<String>.from(currentUser['userIds']);
-        print('User IDs in room: $userIds');
-        final user = await FirebaseFirestore.instance.collection('users')
-            .doc(userIds[0])  // Assuming the first user is the receiver
-            .get();
-        final receiverToken = user.data()?['tokenFCM'] as String?;
-        if (receiverToken != null && receiverToken.isNotEmpty) {
-          return receiverToken;
-        }
-      }
-      return ''; // Token not found or document doesn't exist
-    } catch (error) {
-      print('Error fetching receiver token: $error');
-      return ''; // Return empty token if error occurs
-    }
+  String _formatTimestamp(Timestamp? timestamp) {
+    if (timestamp == null) return '';
+    final date = timestamp.toDate();
+    return '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
   }
 
   @override
   Widget build(BuildContext context) {
+  final chatTheme = Provider.of<ThemeProvider>(context).currentTheme;
+  final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Chat'),
-      ),
+backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+appBar: AppBar(
+  title: const Text('Chat'),
+  actions: [
+    IconButton(
+      icon: const Icon(Icons.brightness_6),
+      onPressed: () {
+        Provider.of<ThemeProvider>(context, listen: false).toggleTheme();
+      },
+    )
+  ],
+),
       body: Column(
         children: [
           Expanded(
@@ -180,99 +122,69 @@ class _ChatScreenState extends State<ChatScreen> {
                   .orderBy('timestamp')
                   .snapshots(),
               builder: (ctx, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
+                if (!snapshot.hasData) {
                   return const Center(child: CircularProgressIndicator());
                 }
-                if (snapshot.hasError) {
-                  return const Center(child: Text('Something went wrong'));
-                }
-                final chatDocs = snapshot.data!.docs;
+
+                final messages = snapshot.data!.docs;
+
                 return ListView.builder(
-                  itemCount: chatDocs.length,
+                  controller: _scrollController,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  itemCount: messages.length,
                   itemBuilder: (ctx, index) {
-                    final chat = chatDocs[index];
-                    final isCurrentUser = chat['senderId'] == FirebaseAuth.instance.currentUser!.uid;
-                    return Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Align(
-                        alignment: isCurrentUser
-                            ? Alignment.centerRight
-                            : Alignment.centerLeft,
-                        child: Column(
-                          crossAxisAlignment: isCurrentUser
-                              ? CrossAxisAlignment.end
-                              : CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              decoration: BoxDecoration(
-                                color: isCurrentUser
-                                    ? Colors.blue[200]
-                                    : Colors.grey[300],
-                                borderRadius: BorderRadius.circular(15),
-                              ),
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 10, horizontal: 15),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    chat['message'],
-                                    style: TextStyle(
-                                      color: isCurrentUser
-                                          ? Colors.white
-                                          : Colors.black,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 5),
-                                  Text(
-                                    chat['timestamp'] != null
-                                        ? (chat['timestamp'] as Timestamp)
-                                            .toDate()
-                                            .toLocal()
-                                            .toString()
-                                            .split(' ')[1]
-                                        : '',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: isCurrentUser
-                                          ? Colors.white70
-                                          : Colors.black45,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
+                    return _buildMessage(messages[index]);
                   },
                 );
               },
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _controller,
-                    decoration: const InputDecoration(
-                      labelText: 'Enter message...',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.send),
-                  onPressed: _sendMessage,
-                ),
-              ],
-            ),
-          ),
+          const Divider(height: 1, color: Colors.grey),
+          _buildMessageInput(),
         ],
+      ),
+    );
+  }
+
+  Widget _buildMessageInput() {
+    return SafeArea(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        color: const Color(0xff1c1c1e),
+        child: Row(
+          children: [
+            Expanded(
+              child: TextField(
+              controller: _messageController, 
+              style: const TextStyle(color: Colors.white), 
+              decoration: InputDecoration(
+                hintText: 'Message...',
+                hintStyle: TextStyle(color: Colors.grey[500]),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                filled: true,
+                fillColor: const Color(0xff2c2c2e), 
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(24),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+              onSubmitted: (_) => _sendMessage(), 
+            ),
+            ),
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: _sendMessage,
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.blueAccent,
+                ),
+                child: const Icon(Icons.send, color: Colors.white, size: 20),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -330,7 +329,10 @@ class _DetailScreenstState extends State<DetailScreens> {
                                     return const Home();
                                   }));
                                 },
-                                icon: Icon(Icons.arrow_back)),
+                                icon: Icon(
+                                  Icons.arrow_back,
+                                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                                )),
                             SizedBox(
                               width: sizeWidth * 0.6,
                               height: sizeHeight * 0.06,
@@ -371,17 +373,17 @@ class _DetailScreenstState extends State<DetailScreens> {
                               width: sizeWidth * 0.11,
                               height: sizeHeight * 0.05,
                               decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(10),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.4),
-                                    blurRadius: 5,
-                                    spreadRadius: 2,
-                                    offset: const Offset(2, 4),
-                                  ),
-                                ],
-                              ),
+                              color: Theme.of(context).colorScheme.surface,
+                              borderRadius: BorderRadius.circular(10),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.4),
+                                  blurRadius: 5,
+                                  spreadRadius: 2,
+                                  offset: const Offset(2, 4),
+                                ),
+                              ],
+                            ),
                               child: Center(
                                 child: IconButton(
                                   onPressed: () async {
@@ -432,19 +434,20 @@ class _DetailScreenstState extends State<DetailScreens> {
                                 width: sizeWidth * 0.11,
                                 height: sizeHeight * 0.05,
                                 decoration: BoxDecoration(
-                                  color: _sampah?.isBookmarked == true
-                                      ? Colors.yellow
-                                      : Colors.white,
-                                  borderRadius: BorderRadius.circular(10),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.4),
-                                      blurRadius: 5,
-                                      spreadRadius: 2,
-                                      offset: const Offset(2, 4),
-                                    ),
-                                  ],
-                                ),
+                                color: (_sampah != null && _sampah!.isBookmarked == true)
+                                ? const Color.fromARGB(255, 15, 255, 143)
+                                : Theme.of(context).colorScheme.surface,
+                                borderRadius: BorderRadius.circular(10),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.4),
+                                    blurRadius: 5,
+                                    spreadRadius: 2,
+                                    offset: const Offset(2, 4),
+                                  ),
+                                ],
+                              ),
+
                                 child: Center(
                                   child: IconButton(
                                     onPressed: () {
@@ -480,7 +483,7 @@ class _DetailScreenstState extends State<DetailScreens> {
                         height: _height * sizeHeight,
                         width: sizeWidth,
                         decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.7),
+                            color: Theme.of(context).colorScheme.background.withOpacity(0.9),
                             borderRadius: BorderRadius.only(
                               topLeft: Radius.circular(20),
                               topRight: Radius.circular(20),
@@ -541,6 +544,7 @@ class _DetailScreenstState extends State<DetailScreens> {
                                                       title: "Kondisi",
                                                       size: 16,
                                                       width: 0.2,
+                                                      
                                                     ),
                                                     SizedBox(width: 85),
                                                     Expanded(
@@ -647,12 +651,10 @@ class _DetailScreenstState extends State<DetailScreens> {
                                                         horizontal: 10),
                                                     padding:
                                                         const EdgeInsets.all(8),
-                                                    decoration: BoxDecoration(
-                                                      color: Color(0xFFDCE4A7),
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              10),
-                                                    ),
+                                                   decoration: BoxDecoration(
+                                                    color: Theme.of(context).colorScheme.surface,
+                                                    borderRadius: BorderRadius.circular(10),
+                                                  ),
                                                     child: Row(
                                                       crossAxisAlignment:
                                                           CrossAxisAlignment
@@ -693,20 +695,19 @@ class _DetailScreenstState extends State<DetailScreens> {
                                                                 CrossAxisAlignment
                                                                     .start,
                                                             children: [
-                                                              CustomFont(
-                                                                title: comment
-                                                                        .userName ??
-                                                                    "",
-                                                                size: 15,
-                                                                width: 0.5,
-                                                              ),
-                                                              CustomFont(
-                                                                title: comment
-                                                                        .comment ??
-                                                                    "",
-                                                                size: 12,
-                                                                width: 0.8,
-                                                              ),
+                                                             CustomFont(
+                                                              title: comment.userName ?? "",
+                                                              size: 15,
+                                                              width: 0.5,
+                                                              color: Theme.of(context).colorScheme.onSurface,
+                                                            ),
+                                                            CustomFont(
+                                                              title: comment.comment ?? "",
+                                                              size: 12,
+                                                              width: 0.8,
+                                                              color: Theme.of(context).colorScheme.onSurface,
+                                                            ),
+
                                                             ],
                                                           ),
                                                         ),
